@@ -384,7 +384,7 @@ class Calculator():
           for q in range(num_ao):
             electron_repulsion_in_Fock_matrix[p, q] = np.sum(
               ao_electron_repulsion_integral[p, q, :, :] * total_density)
-        
+
         if not self.flag_ksdft:
           # UHF: Build Fock matrices with exchange terms
           # UHF: 交換項を含むFock行列を構築
