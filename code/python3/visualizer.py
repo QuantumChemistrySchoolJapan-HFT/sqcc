@@ -228,37 +228,49 @@ class DensityVisualizer():
     # 平面の向きに基づいて軸ラベルを決定
     # Check if this is a standard plane (XY, XZ, or YZ)
     # 標準平面（XY、XZ、YZ）かどうかを確認
-    if np.allclose(np.abs(normal), [0, 0, 1]):  # XY plane (normal along Z)
-      xlabel = '$\it{x}$ / Å'
-      ylabel = '$\it{y}$ / Å'
-    elif np.allclose(np.abs(normal), [0, 1, 0]):  # XZ plane (normal along Y)
-      xlabel = '$\it{x}$ / Å'
-      ylabel = '$\it{z}$ / Å'
-    elif np.allclose(np.abs(normal), [1, 0, 0]):  # YZ plane (normal along X)
-      xlabel = '$\it{y}$ / Å'
-      ylabel = '$\it{z}$ / Å'
-    else:  # Arbitrary plane
-      xlabel = '$\it{u}$ / Å'
-      ylabel = '$\it{v}$ / Å'
+    # For standard planes, we set v1 and v2 explicitly to match expected axes
+    # 標準平面の場合、期待される軸に合わせてv1とv2を明示的に設定
 
     # Create two orthogonal vectors in the plane
     # 平面内の2つの直交ベクトルを作成
-    # Choose an arbitrary vector not parallel to normal
-    # 法線に平行でない任意のベクトルを選択
-    if abs(normal[0]) < 0.9:
-      arbitrary = np.array([1.0, 0.0, 0.0])
-    else:
-      arbitrary = np.array([0.0, 1.0, 0.0])
+    if np.allclose(np.abs(normal), [0, 0, 1]):  # XY plane (normal along Z)
+      # v1 along X, v2 along Y
+      v1 = np.array([1.0, 0.0, 0.0])
+      v2 = np.array([0.0, 1.0, 0.0])
+      xlabel = '$\it{x}$ / Å'
+      ylabel = '$\it{y}$ / Å'
+    elif np.allclose(np.abs(normal), [0, 1, 0]):  # XZ plane (normal along Y)
+      # v1 along X, v2 along Z
+      v1 = np.array([1.0, 0.0, 0.0])
+      v2 = np.array([0.0, 0.0, 1.0])
+      xlabel = '$\it{x}$ / Å'
+      ylabel = '$\it{z}$ / Å'
+    elif np.allclose(np.abs(normal), [1, 0, 0]):  # YZ plane (normal along X)
+      # v1 along Y, v2 along Z
+      v1 = np.array([0.0, 1.0, 0.0])
+      v2 = np.array([0.0, 0.0, 1.0])
+      xlabel = '$\it{y}$ / Å'
+      ylabel = '$\it{z}$ / Å'
+    else:  # Arbitrary plane
+      # Choose an arbitrary vector not parallel to normal
+      # 法線に平行でない任意のベクトルを選択
+      if abs(normal[0]) < 0.9:
+        arbitrary = np.array([1.0, 0.0, 0.0])
+      else:
+        arbitrary = np.array([0.0, 1.0, 0.0])
 
-    # First basis vector: cross product
-    # 第1基底ベクトル: 外積
-    v1 = np.cross(normal, arbitrary)
-    v1 = v1 / np.linalg.norm(v1)
+      # First basis vector: cross product
+      # 第1基底ベクトル: 外積
+      v1 = np.cross(normal, arbitrary)
+      v1 = v1 / np.linalg.norm(v1)
 
-    # Second basis vector: cross product of normal and v1
-    # 第2基底ベクトル: 法線とv1の外積
-    v2 = np.cross(normal, v1)
-    v2 = v2 / np.linalg.norm(v2)
+      # Second basis vector: cross product of normal and v1
+      # 第2基底ベクトル: 法線とv1の外積
+      v2 = np.cross(normal, v1)
+      v2 = v2 / np.linalg.norm(v2)
+
+      xlabel = '$\it{u}$ / Å'
+      ylabel = '$\it{v}$ / Å'
 
     # Create grid in the plane
     # 平面内にグリッドを作成
@@ -268,10 +280,13 @@ class DensityVisualizer():
 
     # Calculate 3D coordinates for each grid point
     # 各グリッド点の3D座標を計算
+    # Note: meshgrid returns arrays where U[i,j] corresponds to u[j] and V[i,j] corresponds to v[i]
+    # 注: meshgridはU[i,j]がu[j]に、V[i,j]がv[i]に対応する配列を返す
     points = np.zeros((num_points * num_points, 3))
     for i in range(num_points):
       for j in range(num_points):
         idx = i * num_points + j
+        # U[i,j] = u[j], V[i,j] = v[i]
         points[idx, :] = plane_origin_bohr + U[i, j] * v1 + V[i, j] * v2
 
     print("Calculating electron density at %d points..." % len(points))
@@ -325,6 +340,10 @@ class DensityVisualizer():
 
     # Plot density as contour map in log10 scale
     # 密度をlog10スケールで等高線図としてプロット
+    # Note: contourf expects Z[i,j] to correspond to X[i,j], Y[i,j]
+    # Since meshgrid creates U[i,j]=u[j], V[i,j]=v[i], this is already correct
+    # 注: contourfはZ[i,j]がX[i,j], Y[i,j]に対応することを期待
+    # meshgridはU[i,j]=u[j], V[i,j]=v[i]を作るので、これは既に正しい
     contour = ax.contourf(U_ang, V_ang, log_density_grid, contour_range, cmap=map_color, extend='both')
 
     # Add colorbar
