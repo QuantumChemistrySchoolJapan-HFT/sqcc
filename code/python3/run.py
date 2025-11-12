@@ -12,7 +12,7 @@ python run.py
 # 必要なモジュールをインポート
 import time
 import logging
-import setting as conf
+import input as conf
 import hf_ksdft
 import cis_tdhf_tda_tddft
 import mp2
