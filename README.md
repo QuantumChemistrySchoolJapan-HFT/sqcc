@@ -103,3 +103,9 @@ Basis_Set_Exchange: for getting basis sets
 
 Psi4: AO積分および数値グリッドと重みの生成のため  
 Basis_Set_Exchange: 基底関数セットの取得のため
+
+## License ライセンス
+This project is licensed under the MIT License. See the LICENSE file for details.
+The MIT license is a permissive free software license originating at the Massachusetts Institute of Technology (MIT).  
+このプロジェクトはMITライセンスの下でライセンスされています。詳細はLICENSEファイルを参照してください。
+MITライセンスは、マサチューセッツ工科大学（MIT）に由来する寛容なフリーソフトウェアライセンスです。
