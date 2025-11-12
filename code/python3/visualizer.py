@@ -340,10 +340,6 @@ class DensityVisualizer():
 
     # Plot density as contour map in log10 scale
     # 密度をlog10スケールで等高線図としてプロット
-    # Note: contourf expects Z[i,j] to correspond to X[i,j], Y[i,j]
-    # Since meshgrid creates U[i,j]=u[j], V[i,j]=v[i], this is already correct
-    # 注: contourfはZ[i,j]がX[i,j], Y[i,j]に対応することを期待
-    # meshgridはU[i,j]=u[j], V[i,j]=v[i]を作るので、これは既に正しい
     contour = ax.contourf(U_ang, V_ang, log_density_grid, contour_range, cmap=map_color, extend='both')
 
     # Add colorbar
