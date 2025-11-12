@@ -14,6 +14,17 @@ import psi4
 from basis_set_exchange import lut
 
 
+def get_psi4_version() -> str:
+    """
+    Get Psi4 version string
+    Psi4のバージョン文字列を取得
+    
+    Returns:
+        Version string / バージョン文字列
+    """
+    return psi4.__version__
+
+
 def generate_psi4_geometry(
     nuclear_numbers: np.ndarray,
     geom_coordinates: np.ndarray

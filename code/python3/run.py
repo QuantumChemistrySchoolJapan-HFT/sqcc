@@ -17,6 +17,7 @@ import hf_ksdft
 import cis_tdhf_tda_tddft
 import mp2
 import visualizer
+import interface_psi4 as ipsi4
 
 # Configure logging to display messages
 # ログ出力の設定
@@ -161,6 +162,17 @@ def run_analysis(scf_object, analysis_params):
 # If this run.py file is executed as the main program, run the following operations.
 # この run.py ファイルがメインプログラムとして実行された場合、以下の操作を実行
 if __name__ == "__main__":
+    print("=" * 60)
+    print("SQCC: Simple Quantum Chemistry Calculator")
+    print("=" * 60)
+    print()
+
+    # Print Psi4 version information
+    # Psi4バージョン情報を表示
+    print("Psi4 version: %s" % ipsi4.get_psi4_version())
+    print("Psi4バージョン: %s" % ipsi4.get_psi4_version())
+    print()
+
     # Run the initial SCF calculation (Hartree-Fock or Kohn-Sham DFT)
     # 初期のSCF計算を実行（ハートリー・フォック法またはコーン・シャムDFT）
     scf_result, flag_mp2, flag_cis = run_hf_ksdft()
