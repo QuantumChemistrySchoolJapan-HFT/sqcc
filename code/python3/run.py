@@ -41,19 +41,26 @@ def run_hf_ksdft():
     # 設定ファイルから計算パラメータを読み込み
     mol_xyz, nuclear_numbers, geom_coordinates, basis_set_name, \
       ksdft_functional_name, molecular_charge, spin_multiplicity, \
-      flag_cis, flag_mp2 = conf.get_calc_params()
+      flag_cis, flag_mp2, flag_qmmm, mm_charges_file = conf.get_calc_params()
+
+    # Read MM charges if QM/MM is enabled
+    # QM/MMが有効な場合、MM電荷を読み込む
+    if flag_qmmm:
+      mm_coords, mm_charges = conf.read_mm_charges(mm_charges_file)
+    else:
+      mm_coords = None
+      mm_charges = None
 
     # Initialize the SCF Calculator with molecular information
     # 分子情報を使ってSCFドライバーを初期化
     myscf = hf_ksdft.Calculator(mol_xyz, nuclear_numbers,
                       geom_coordinates, basis_set_name,
                       ksdft_functional_name, molecular_charge,
-                      spin_multiplicity)
+                      spin_multiplicity, mm_coords, mm_charges)
 
     # Perform the SCF calculation
     # SCF計算を実行
     myscf.scf()
-
     # Calculate and display elapsed time
     # 経過時間を計算して表示
     elapsed = time.perf_counter() - start

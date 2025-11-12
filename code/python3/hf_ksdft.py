@@ -19,7 +19,8 @@ class Calculator():
   """
   def __init__(self, mol_xyz, nuclear_numbers, geom_coordinates,
                basis_set_name, ksdft_functional_name,
-               molecular_charge, spin_multiplicity):
+               molecular_charge, spin_multiplicity,
+               mm_coords=None, mm_charges=None):
     """
     Initialize SCF calculator with molecular information
     分子情報を使ってSCF計算器を初期化
@@ -32,6 +33,8 @@ class Calculator():
         ksdft_functional_name: DFT functional name (None for HF) / DFT汎関数名（HFの場合None）
         molecular_charge: Molecular charge / 分子の電荷
         spin_multiplicity: Spin multiplicity (2S+1) / スピン多重度（2S+1）
+        mm_coords: MM point charges coordinates in Angstrom (optional) / MM点電荷座標（オングストローム）（オプション）
+        mm_charges: MM point charges in elementary charge (optional) / MM点電荷（素電荷）（オプション）
     """
     # Store molecular information
     # 分子情報を保存
@@ -44,6 +47,26 @@ class Calculator():
     # 総電子数を計算
     self.num_electrons = np.sum(nuclear_numbers) - molecular_charge
     self.spin_multiplicity = spin_multiplicity
+
+    # Store QM/MM information
+    # QM/MM情報を保存
+    self.mm_coords = mm_coords
+    self.mm_charges = mm_charges
+
+    # Check if QM/MM is enabled
+    # QM/MMが有効か確認
+    if self.mm_coords is not None and self.mm_charges is not None:
+      print("=" * 60)
+      print("QM/MM calculation enabled")
+      print("QM/MM計算が有効化されました")
+      print(f"Number of MM point charges: {len(self.mm_charges)}")
+      print(f"MM点電荷の数: {len(self.mm_charges)}")
+      print(f"Total MM charge: {np.sum(self.mm_charges):.6f}")
+      print(f"総MM電荷: {np.sum(self.mm_charges):.6f}")
+      print("Embedding method: Numerical integration on DFT grids")
+      print("埋め込み手法: DFTグリッド上の数値積分")
+      print("=" * 60)
+      print()
 
     # Check if DFT functional is requested
     # DFT汎関数が要求されているか確認
@@ -172,7 +195,45 @@ class Calculator():
         # Add Coulomb repulsion: Z_i * Z_j / r_ij
         # クーロン反発を加算: Z_i * Z_j / r_ij
         ret += charges[i] * charges[j] / d
+
+    print(f"Nuclear repulsion energy: {ret:.12f} Hartree")
     return ret
+
+  @staticmethod
+  def calc_qmmm_nuclear_interaction(qm_coordinates, qm_charges, mm_coordinates, mm_charges):
+    """
+    Calculate QM/MM nuclear interaction energy
+    QM/MM核相互作用エネルギーを計算
+
+    Computes the classical Coulomb interaction between QM nuclei and MM point charges
+    QM原子核とMM点電荷間の古典的クーロン相互作用を計算
+
+    Args:
+        qm_coordinates: QM nuclear coordinates in Angstrom / QM原子核座標（オングストローム単位）
+        qm_charges: QM nuclear charges (atomic numbers) / QM核電荷（原子番号）
+        mm_coordinates: MM point charge coordinates in Angstrom / MM点電荷座標（オングストローム単位）
+        mm_charges: MM point charges in elementary charge / MM点電荷（素電荷単位）
+
+    Returns:
+        QM/MM nuclear interaction energy in Hartree / QM/MM核相互作用エネルギー（Hartree単位）
+    """
+    # Conversion factor from Angstrom to Bohr
+    # オングストロームからボーアへの変換係数
+    ang_to_bohr = 1 / 0.52917721067
+    n_qm = len(qm_coordinates)
+    n_mm = len(mm_coordinates)
+    energy = 0.0
+    # Sum over all QM-MM pairs
+    # 全てのQM-MMペアについて和を取る
+    for i in range(n_qm):
+      for j in range(n_mm):
+        # Calculate QM-MM distance in Bohr
+        # QM-MM間距離をボーア単位で計算
+        d = np.linalg.norm((qm_coordinates[i] - mm_coordinates[j]) * ang_to_bohr)
+        # Add Coulomb interaction: Z_i * q_j / r_ij
+        # クーロン相互作用を加算: Z_i * q_j / r_ij
+        energy += qm_charges[i] * mm_charges[j] / d
+    return energy
 
 
   def scf(self):
@@ -218,6 +279,9 @@ class Calculator():
     # 重なり積分 S
     ao_overlap_integral = proc_ao_integral.ao_overlap_integral()
 
+    real_space_grids = None
+    weights_grids = None
+
     # For KS-DFT: generate numerical integration grids
     # KS-DFTの場合: 数値積分グリッドを生成
     if self.flag_ksdft:
@@ -229,8 +293,7 @@ class Calculator():
           "The number of AOs is too large for the current implementation.")
       # Generate 3D grid points and integration weights
       # 3Dグリッド点と積分重みを生成
-      real_space_grids, weights_grids = \
-        proc_ao_integral.generate_numerical_integration_grids_and_weights()
+      real_space_grids, weights_grids = proc_ao_integral.generate_numerical_integration_grids_and_weights()
       num_grids = len(real_space_grids)
       ao_values_at_grids = np.zeros((num_grids, num_ao))
       # Calculate AO values at each grid point
@@ -240,6 +303,23 @@ class Calculator():
     # Compute core Hamiltonian H_core = T + V
     # コアハミルトニアンを計算 H_core = T + V
     core_hamiltonian = ao_kinetic_integral + ao_nuclear_attraction_integral
+
+    # Compute external potential from MM charges if QM/MM is enabled
+    # QM/MMが有効な場合、MM電荷からの外場ポテンシャルを計算
+    if self.mm_coords is not None and self.mm_charges is not None:
+      if real_space_grids is None or weights_grids is None:
+        # Generate grids only for QM region
+        # QM領域のみのグリッドを生成
+        real_space_grids, weights_grids = proc_ao_integral.generate_numerical_integration_grids_and_weights()
+      external_potential = proc_ao_integral.compute_external_potential_integrals(
+        self.mm_coords, self.mm_charges, real_space_grids, weights_grids)
+
+      # Add external potential to core Hamiltonian
+      # 外場ポテンシャルをコアハミルトニアンに追加
+      core_hamiltonian += external_potential
+      print("External potential added to core Hamiltonian")
+      print("外場ポテンシャルをコアハミルトニアンに追加しました")
+      print()
 
     # Prepare the orthogonalizer S^(-1/2) for solving the eigenvalue problem
     # 固有値問題を解くための直交化行列 S^(-1/2) を準備
@@ -282,11 +362,20 @@ class Calculator():
     density_matrix_in_ao_basis = Calculator.calc_density_matrix_in_ao_basis(
       self, mo_coefficients)
 
-
     # Calculate nuclear repulsion energy (constant throughout SCF)
     # 核間反発エネルギーを計算（SCF中は一定）
     nuclear_repulsion_energy = Calculator.calc_nuclei_repulsion_energy(
       self.geom_coordinates, self.nuclear_numbers)
+
+    # Add QM/MM nuclear interaction if QM/MM is enabled
+    # QM/MMが有効な場合、QM/MM核相互作用を追加
+    if self.mm_coords is not None and self.mm_charges is not None:
+      qmmm_nuclear_energy = Calculator.calc_qmmm_nuclear_interaction(
+        self.geom_coordinates, self.nuclear_numbers, self.mm_coords, self.mm_charges)
+      nuclear_repulsion_energy += qmmm_nuclear_energy
+      print(f"QM/MM nuclear interaction energy: {qmmm_nuclear_energy:.10f} Hartree")
+      print(f"QM/MM核相互作用エネルギー: {qmmm_nuclear_energy:.10f} Hartree")
+      print()
 
     # For KS-DFT: calculate initial electron density at grid points
     # KS-DFTの場合: グリッド点での初期電子密度を計算

@@ -18,7 +18,7 @@ def get_psi4_version() -> str:
     """
     Get Psi4 version string
     Psi4のバージョン文字列を取得
-    
+
     Returns:
         Version string / バージョン文字列
     """
@@ -100,6 +100,9 @@ class Psi4Interface:
 
         mol_xyz_for_psi4 = "nocom\nnoreorient\n" + geom_part + "\n"
         mol = psi4.geometry(mol_xyz_for_psi4)
+        # Prevent Psi4 from reorienting or shifting the molecule any further.
+        mol.fix_orientation(True)
+        mol.fix_com(True)
 
         # Store molecular information
         # 分子情報を保存
@@ -110,7 +113,16 @@ class Psi4Interface:
         self.ksdft_functional_name = ksdft_functional_name
         # Set basis set option in Psi4
         # Psi4で基底関数セットオプションを設定
-        psi4.set_options({'basis': self.basis_set_name})
+        # psi4.set_options({
+        #     'basis': self.basis_set_name,
+        #     'dft_radial_points': 120,
+        #     'dft_spherical_points': 434,
+        # })
+        psi4.set_options({
+            'basis': self.basis_set_name,
+            'dft_radial_points': 230,
+            'dft_spherical_points': 770,
+        })
         # Build wavefunction object with specified basis
         # 指定した基底関数でwavefunctionオブジェクトを構築
         wfn = psi4.core.Wavefunction.build(
@@ -192,7 +204,11 @@ class Psi4Interface:
         # float64精度のnumpy配列に変換
         return np.asarray(overlap_integrals, dtype='float64')
 
-    def generate_numerical_integration_grids_and_weights(self) -> Tuple[np.ndarray, np.ndarray]:
+    def generate_numerical_integration_grids_and_weights(
+        self,
+        mm_coords: Optional[np.ndarray] = None,
+        mm_charges: Optional[np.ndarray] = None
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Generate 3D Cartesian grids and weights for numerical integration
         数値積分用の3Dデカルトグリッドと重みを生成
@@ -203,8 +219,12 @@ class Psi4Interface:
         DFTグリッド生成にBeckeの分割法を使用。
         参考文献: https://github.com/psi4/psi4numpy/blob/master/Tutorials/04_Density_Functional_Theory/4a_Grids.ipynb
 
+        Args:
+            mm_coords: Optional MM coordinates in Angstrom / オプションのMM座標（オングストローム）
+            mm_charges: Optional MM charges / オプションのMM電荷
+
         Returns:
-            grids: 3D grid points (Mx3 array) / 3Dグリッド点 (Mx3配列)
+            grids: 3D grid points (Mx3 array) in Bohr / 3Dグリッド点（Mx3配列）（ボーア単位）
             weights: Integration weights for each grid / 各グリッドの積分重み
         """
         # Build potential object for DFT grid generation
@@ -292,3 +312,95 @@ class Psi4Interface:
             # このAOの原子中心インデックスを取得
             ao_atomic_affiliation[i] = self.psi4_basis_set.function_to_center(i)
         return ao_atomic_affiliation
+
+    def compute_external_potential_integrals(
+        self,
+        mm_coords: np.ndarray,
+        mm_charges: np.ndarray,
+        grids: Optional[np.ndarray] = None,
+        grid_weights: Optional[np.ndarray] = None
+    ) -> np.ndarray:
+        """
+        Compute external potential integrals from MM point charges using numerical integration.
+        数値積分を用いてMM点電荷からの外場ポテンシャル積分を計算
+
+        V_pq = Σ_A q_A ∫ φ_p(r) (1/|r-R_A|) φ_q(r) dr
+
+        Args:
+            mm_coords: MM point charge coordinates in Angstrom / MM点電荷座標（オングストローム単位）
+            mm_charges: MM point charges in elementary charge / MM点電荷（素電荷単位）
+            grids: DFT grid points in Bohr (optional) / DFTグリッド点（ボーア単位）（オプション）
+            grid_weights: DFT grid weights (optional) / DFTグリッド重み（オプション）
+
+        Returns:
+            External potential matrix in AO basis / AO基底での外場ポテンシャル行列
+        """
+        if grids is None or grid_weights is None:
+            # Generate grids only for QM region (MM region grids are not needed)
+            # QM領域のみのグリッドを生成（MM領域のグリッドは不要）
+            grids, grid_weights = self.generate_numerical_integration_grids_and_weights()
+
+        return self._compute_external_potential_integrals_numeric(
+            mm_coords, mm_charges, grids, grid_weights)
+
+    def _compute_external_potential_integrals_numeric(
+        self,
+        mm_coords: np.ndarray,
+        mm_charges: np.ndarray,
+        grids: np.ndarray,
+        grid_weights: np.ndarray
+    ) -> np.ndarray:
+        """
+        Compute MM external potential integrals using numerical integration on DFT grids.
+        DFTグリッド上の数値積分を用いてMM外場ポテンシャル積分を計算
+
+        V_pq = ∫ φ_p(r) * V_MM(r) * φ_q(r) dr
+        where V_MM(r) = Σ_A q_A / |r - R_A|
+
+        Args:
+            mm_coords: MM coordinates in Angstrom / MM座標（オングストローム単位）
+            mm_charges: MM charges in elementary charge / MM電荷（素電荷単位）
+            grids: DFT grid points in Bohr / DFTグリッド点（ボーア単位）
+            grid_weights: Integration weights / 積分重み
+
+        Returns:
+            External potential matrix in AO basis / AO基底での外場ポテンシャル行列
+        """
+        # Convert MM coordinates from Angstrom to Bohr
+        # MM座標をオングストロームからボーアに変換
+        ang_to_bohr = 1.0 / 0.52917721067
+        mm_coords_bohr = mm_coords * ang_to_bohr
+
+        num_ao = self.psi4_basis_set.nbf()
+        num_grids = len(grid_weights)
+
+        # Compute AO values at all grid points at once (more efficient)
+        # 全グリッド点でのAO値を一度に計算（より効率的）
+        ao_values = self.generate_ao_values_at_grids(grids)
+
+        # Compute MM electrostatic potential at each grid point
+        # 各グリッド点でのMM静電ポテンシャルを計算
+        # V_MM(r) = -Σ_A q_A / |r - R_A| where all coordinates are in Bohr
+        # V_MM(r) = -Σ_A q_A / |r - R_A| 全ての座標はボーア単位
+        # Note: Negative sign because we need attractive potential for electrons
+        # 注: 電子に対する引力ポテンシャルなので負符号
+        potential_at_grids = np.zeros(num_grids)
+        for n in range(num_grids):
+            for i_mm in range(len(mm_charges)):
+                # Both grids and mm_coords_bohr are in Bohr
+                # gridsとmm_coords_bohrは両方ともボーア単位
+                r_vec = grids[n, :] - mm_coords_bohr[i_mm, :]
+                r = np.linalg.norm(r_vec)
+                if r > 1e-10:  # Avoid division by zero / ゼロ除算を回避
+                    potential_at_grids[n] += -mm_charges[i_mm] / r
+
+        # Integrate: V_pq = Σ_n w_n * φ_p(r_n) * V_MM(r_n) * φ_q(r_n)
+        # 積分: V_pq = Σ_n w_n * φ_p(r_n) * V_MM(r_n) * φ_q(r_n)
+        v_ext = np.zeros((num_ao, num_ao))
+        for p in range(num_ao):
+            for q in range(num_ao):
+                integrand = ao_values[:, p] * potential_at_grids * ao_values[:, q] * grid_weights
+                v_ext[p, q] = np.sum(integrand)
+
+        print("Computed external potential using numerical integration on DFT grids.")
+        return v_ext

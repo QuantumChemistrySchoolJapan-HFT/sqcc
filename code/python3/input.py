@@ -124,7 +124,7 @@ def read_xyz(xyz_file_name: str) -> Tuple[str, np.ndarray, np.ndarray]:
 def get_calc_params(
     flag_multiple_mols: bool = False,
     another_conf_file_name: str = 'sqc2.conf'
-) -> Tuple[str, np.ndarray, np.ndarray, str, Optional[str], int, int, bool, bool]:
+) -> Tuple[str, np.ndarray, np.ndarray, str, Optional[str], int, int, bool, bool, bool, Optional[str]]:
     """
     Parse configuration file and extract calculation parameters
     設定ファイルを解析して計算パラメータを取得
@@ -143,6 +143,8 @@ def get_calc_params(
         spin_multiplicity: Spin multiplicity (2S+1) / スピン多重度（2S+1）
         flag_cis: Run CIS calculation / CIS計算を実行
         flag_mp2: Run MP2 calculation / MP2計算を実行
+        flag_qmmm: Enable QM/MM calculation / QM/MM計算を有効化
+        mm_charges_file: Path to MM charges file (None if not used) / MM電荷ファイルのパス（未使用の場合None）
 
     Raises:
         FileNotFoundError: If config file does not exist / 設定ファイルが存在しない場合
@@ -206,6 +208,20 @@ def get_calc_params(
     post_hf = sqc_conf['calc'].get('post_hartree-fock', '').lower()
     flag_mp2 = (post_hf == 'mp2')
 
+    # Check if QM/MM calculation is requested
+    # QM/MM計算が要求されているか確認
+    qmmm_str = sqc_conf['calc'].get('qmmm', 'false').lower()
+    flag_qmmm = (qmmm_str == 'true')
+
+    # Get MM charges file path if QM/MM is enabled
+    # QM/MMが有効な場合、MM電荷ファイルのパスを取得
+    if flag_qmmm:
+        mm_charges_file = sqc_conf['calc'].get('mm_charges', None)
+        if mm_charges_file is None:
+            raise ValueError("QM/MM is enabled but 'mm_charges' parameter is missing in config file")
+    else:
+        mm_charges_file = None
+
     # Return all parameters
     # 全パラメータを返す
     return (
@@ -217,7 +233,9 @@ def get_calc_params(
         molecular_charge,
         spin_multiplicity,
         flag_cis,
-        flag_mp2
+        flag_mp2,
+        flag_qmmm,
+        mm_charges_file
     )
 
 
@@ -280,3 +298,63 @@ def get_analysis_params(
         analysis_params['electron_density'] = (electron_density_str == 'true')
 
     return analysis_params
+
+
+def read_mm_charges(file_path: str) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Read MM point charges from file
+    ファイルからMM点電荷を読み込む
+
+    File format / ファイル形式:
+        num_charges
+        (blank line)
+        charge1 x1 y1 z1
+        charge2 x2 y2 z2
+        ...
+
+    Args:
+        file_path: Path to MM charges file / MM電荷ファイルのパス
+
+    Returns:
+        mm_coords: MM coordinates in Angstrom (num_charges, 3) / MM座標（オングストローム）
+        mm_charges: MM charges in elementary charge (num_charges,) / MM電荷（素電荷）
+
+    Raises:
+        FileNotFoundError: If MM charges file does not exist / MM電荷ファイルが存在しない場合
+        ValueError: If file format is invalid / ファイル形式が不正な場合
+    """
+    if not os.path.isfile(file_path):
+        raise FileNotFoundError(f"MM charges file '{file_path}' not found.")
+
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+
+    if len(lines) < 3:
+        raise ValueError("MM charges file must have at least 3 lines")
+
+    try:
+        num_charges = int(lines[0].strip())
+    except ValueError:
+        raise ValueError(f"First line must be an integer (number of charges), got: {lines[0].strip()}")
+
+    mm_coords = np.zeros((num_charges, 3))
+    mm_charges = np.zeros(num_charges)
+
+    for i in range(num_charges):
+        line_idx = i + 2  # Skip first line (count) and second line (blank)
+        if line_idx >= len(lines):
+            raise ValueError(f"Expected {num_charges} charges, but file has fewer lines")
+
+        parts = lines[line_idx].split()
+        if len(parts) < 4:
+            raise ValueError(f"Line {line_idx+1} must have 4 values (charge x y z), got: {lines[line_idx].strip()}")
+
+        try:
+            mm_charges[i] = float(parts[0])
+            mm_coords[i, 0] = float(parts[1])
+            mm_coords[i, 1] = float(parts[2])
+            mm_coords[i, 2] = float(parts[3])
+        except ValueError as e:
+            raise ValueError(f"Invalid number format on line {line_idx+1}: {e}")
+
+    return mm_coords, mm_charges

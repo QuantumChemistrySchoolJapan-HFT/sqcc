@@ -354,9 +354,9 @@ class DensityVisualizer():
 
         atom = patches.Circle(
           xy=[u_coord / ang_to_bohr, v_coord / ang_to_bohr],
-          radius=atom_radius, 
-          fc=atom_color, 
-          ec='black', 
+          radius=atom_radius,
+          fc=atom_color,
+          ec='black',
           linewidth=1.5,
           alpha=1.0
         )
