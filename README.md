@@ -98,10 +98,12 @@ For more details, see the example files in the `tests` directory.
 詳細については、`tests`ディレクトリ内のサンプルファイルを参照してください。
 
 ## Dependencies 依存関係
-Psi4: for AO integral and for generating numerical grids and weights  
+Psi4: for AO integral and for generating numerical grids and weights
+(T.S. only tested in Psi4 1.9.1)  
 Basis_Set_Exchange: for getting basis sets
 
-Psi4: AO積分および数値グリッドと重みの生成のため  
+Psi4: AO積分および数値グリッドと重みの生成のため
+(Psi4 1.9.1でのみ動作確認済み)  
 Basis_Set_Exchange: 基底関数セットの取得のため
 
 ## License ライセンス
