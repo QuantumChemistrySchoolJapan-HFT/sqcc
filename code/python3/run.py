@@ -16,6 +16,7 @@ import input as conf
 import hf_ksdft
 import cis_tdhf_tda_tddft
 import mp2
+import visualizer
 
 # Configure logging to display messages
 # ログ出力の設定
@@ -119,6 +120,44 @@ def run_mp2(scf_object):
 
     return result
 
+def run_analysis(scf_object, analysis_params):
+    """
+    Run analysis tasks based on configuration
+    設定に基づいて解析タスクを実行
+
+    Args:
+        scf_object: SCF calculation result object / SCF計算結果オブジェクト
+        analysis_params: Dictionary of analysis parameters / 解析パラメータの辞書
+
+    Returns:
+        None
+    """
+    # Check if electron density visualization is requested
+    # 電子密度の可視化が要求されているか確認
+    if analysis_params.get('electron_density', False):
+        logging.info("Running electron density visualization...")
+        logging.info("電子密度の可視化を実行中...")
+
+        # Start timing the analysis
+        # 解析時間の測定を開始
+        start = time.perf_counter()
+
+        # Initialize the density visualizer with SCF result
+        # SCF結果を使って密度可視化オブジェクトを初期化
+        vis = visualizer.DensityVisualizer(scf_object)
+
+        # Plot density on XY, XZ, and YZ planes
+        # XY、XZ、YZ平面で密度をプロット
+        vis.plot_density_xy_plane(z_position=0.0, output_file='density_xy_plane.pdf')
+        vis.plot_density_xz_plane(y_position=0.0, output_file='density_xz_plane.pdf')
+        vis.plot_density_yz_plane(x_position=0.0, output_file='density_yz_plane.pdf')
+
+        # Calculate and display elapsed time
+        # 経過時間を計算して表示
+        elapsed = time.perf_counter() - start
+        logging.info(f"Electron density visualization elapsed_time: {elapsed:.6f} [sec]\n")
+        logging.info(f"電子密度可視化の経過時間: {elapsed:.6f} [秒]\n")
+
 # If this run.py file is executed as the main program, run the following operations.
 # この run.py ファイルがメインプログラムとして実行された場合、以下の操作を実行
 if __name__ == "__main__":
@@ -135,3 +174,12 @@ if __name__ == "__main__":
     # CIS計算が要求されている場合、SCF結果を使って実行
     if flag_cis:
         cis_result = run_cis(scf_result)
+
+    # Read analysis parameters from configuration file
+    # 設定ファイルから解析パラメータを読み込む
+    analysis_params = conf.get_analysis_params()
+
+    # Run analysis tasks if requested
+    # 要求された解析タスクを実行
+    if any(analysis_params.values()):
+        run_analysis(scf_result, analysis_params)

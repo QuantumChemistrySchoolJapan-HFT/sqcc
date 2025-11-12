@@ -72,7 +72,24 @@ class Psi4Interface:
         """
         # Create Psi4 molecule object from XYZ string
         # XYZ文字列からPsi4分子オブジェクトを作成
-        mol = psi4.geometry(mol_xyz)
+        # To prevent Psi4 from reorienting and recentring the molecule, unfortunatelly, very redundant procedure is required.
+        # Psi4が分子を再配置および再中心化するのを防ぐために、非常に冗長な手順が必要です。
+
+        # Check if mol_xyz contains atom count and comment lines (standard XYZ format)
+        # mol_xyzが原子数とコメント行を含むか確認（標準XYZ形式）
+        lines = mol_xyz.strip().splitlines()
+        if lines and lines[0].strip().isdigit():
+            # Full XYZ format: remove first two lines (atom count and comment)
+            # 完全なXYZ形式：最初の2行（原子数とコメント）を削除
+            geom_part = "\n".join(lines[2:])
+        else:
+            # Already atom data only: use as is
+            # すでに原子データのみ：そのまま使用
+            geom_part = mol_xyz.strip()
+
+        mol_xyz_for_psi4 = "nocom\nnoreorient\n" + geom_part + "\n"
+        mol = psi4.geometry(mol_xyz_for_psi4)
+
         # Store molecular information
         # 分子情報を保存
         self.mol = mol

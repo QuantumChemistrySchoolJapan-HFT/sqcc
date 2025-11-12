@@ -219,3 +219,64 @@ def get_calc_params(
         flag_cis,
         flag_mp2
     )
+
+
+def get_analysis_params(
+    flag_multiple_mols: bool = False,
+    another_conf_file_name: str = 'sqc2.conf'
+) -> dict:
+    """
+    Parse configuration file and extract analysis parameters
+    設定ファイルを解析して解析パラメータを取得
+
+    Args:
+        flag_multiple_mols: Use alternative config file / 代替設定ファイルを使用
+        another_conf_file_name: Alternative config file name / 代替設定ファイル名
+
+    Returns:
+        Dictionary of analysis parameters / 解析パラメータの辞書
+        {
+            'electron_density': bool,  # Whether to visualize electron density / 電子密度を可視化するか
+        }
+
+    Raises:
+        FileNotFoundError: If config file does not exist / 設定ファイルが存在しない場合
+    """
+    # Determine which config file to use
+    # どの設定ファイルを使うか決定
+    if flag_multiple_mols:
+        conf_file_name = another_conf_file_name
+    else:
+        conf_file_name = 'sqc.conf'
+
+    # Check if config file exists
+    # 設定ファイルの存在を確認
+    if not os.path.isfile(conf_file_name):
+        raise FileNotFoundError(f"Configuration file '{conf_file_name}' does not exist.")
+
+    # Initialize config parser
+    # 設定パーサーを初期化
+    sqc_conf = configparser.ConfigParser()
+
+    # Read config file
+    # 設定ファイルを読み込む
+    try:
+        sqc_conf.read(conf_file_name)
+    except configparser.Error as e:
+        raise ValueError(f"Error parsing config file: {e}")
+
+    # Initialize analysis parameters dictionary with default values
+    # 解析パラメータの辞書をデフォルト値で初期化
+    analysis_params = {
+        'electron_density': False,
+    }
+
+    # Check if 'analysis' section exists
+    # 'analysis'セクションが存在するか確認
+    if 'analysis' in sqc_conf:
+        # Get electron density visualization flag
+        # 電子密度可視化フラグを取得
+        electron_density_str = sqc_conf['analysis'].get('electron_density', 'false').lower()
+        analysis_params['electron_density'] = (electron_density_str == 'true')
+
+    return analysis_params

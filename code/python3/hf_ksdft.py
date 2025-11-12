@@ -199,6 +199,10 @@ class Calculator():
       self.geom_coordinates, self.basis_set_name,
       self.ksdft_functional_name)
 
+    # Store Psi4 interface for later use (e.g., visualization)
+    # 後で使用するためにPsi4インターフェースを保存（例：可視化）
+    self.psi4_interface = proc_ao_integral
+
     # Compute all requisite analytical AO integrals
     # 必要な解析的AO積分を全て計算
     # Kinetic energy integrals T
