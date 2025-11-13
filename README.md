@@ -113,3 +113,10 @@ This project is licensed under the MIT License. See the LICENSE file for details
 The MIT license is a permissive free software license originating at the Massachusetts Institute of Technology (MIT).  
 このプロジェクトはMITライセンスの下でライセンスされています。詳細はLICENSEファイルを参照してください。
 MITライセンスは、マサチューセッツ工科大学（MIT）に由来する寛容なフリーソフトウェアライセンスです。
+
+## Note 注意
+Most of the code comments are generated based on those of my old code by using AI (Claude Sonnet 4.5) and I do not guarantee their correctness.
+Moreover, most of plotting tools are generated with Claude Sonnet 4.5 and may contain some mistakes.
+
+コードのコメントの大部分は、私の古いコードのそれらを元にAI（Claude Sonnet 4.5）を使用して生成・修正したものであり、その正確性を保証するものではありません。
+さらに、プロットツールの大部分はClaude Sonnet 4.5で生成されており、いくつかの誤りが含まれている可能性があります。
