@@ -327,11 +327,11 @@ class DensityVisualizer():
     max_value = np.amax(log_density_grid)
 
     if min_value == 0.0 and max_value == 0.0:
-      contour_range = np.linspace(0.0, 1.0, 11)
+      contour_range = np.linspace(0.0, 1.0, 21)
       map_color = 'Blues'
     else:
       if min_value >= 0.0:
-        contour_range = np.linspace(0.0, max_value, 11)
+        contour_range = np.linspace(0.0, max_value, 21)
         map_color = 'Blues'
       else:
         abs_max = max(abs(min_value), abs(max_value))
@@ -340,7 +340,8 @@ class DensityVisualizer():
 
     # Plot density as contour map in log10 scale
     # 密度をlog10スケールで等高線図としてプロット
-    contour = ax.contourf(U_ang, V_ang, log_density_grid, contour_range, cmap=map_color, extend='both')
+    contour = ax.contourf(U_ang, V_ang, log_density_grid, contour_range, cmap=map_color, extend='both',
+                          vmin=1.5, vmax=5.5)
 
     # Add colorbar
     # カラーバーを追加
@@ -456,3 +457,159 @@ class DensityVisualizer():
       plane_extent=plane_extent,
       num_points=num_points,
       output_file=output_file)
+
+  def plot_density_3d_slices(self, num_slices=12, z_range=None,
+                            plane_extent=1.5, num_points=200,
+                            output_file='density_3d_slices.pdf'):
+    """
+    Plot multiple XY plane slices in 3D to show density structure
+    3D密度構造を示すために複数のXY平面スライスを3Dでプロット
+
+    Args:
+        num_slices: Number of slices to plot / プロットするスライス数
+        z_range: (z_min, z_max) range in Angstrom, or None for auto / z範囲（オングストローム）、Noneで自動
+        plane_extent: Half-width of each plane in Angstrom / 各平面の半幅（オングストローム）
+        num_points: Number of grid points in each direction / 各方向のグリッド点数
+        output_file: Output PDF file name / 出力PDFファイル名
+    """
+    # Set up z range automatically if not provided
+    # z範囲が指定されていない場合は自動設定
+    if z_range is None:
+      z_coords = [self.geom_coordinates[i][2] for i in range(len(self.nuclear_numbers))]
+      z_min = min(z_coords) - 1.0
+      z_max = max(z_coords) + 1.0
+      z_range = (z_min, z_max)
+
+    z_min = min(z_coords) - 0.7
+    z_max = max(z_coords) + 0.7
+    z_range = (z_min, z_max)
+
+    z_positions = np.linspace(z_range[0], z_range[1], num_slices)
+
+    # Set up matplotlib style
+    # matplotlibのスタイルを設定
+    plt.rcParams['xtick.direction'] = 'in'
+    plt.rcParams['ytick.direction'] = 'in'
+
+    # Create 3D plot
+    # 3Dプロットを作成
+    fig = plt.figure(figsize=(12, 10))
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Determine color scale from first slice
+    # 最初のスライスからカラースケールを決定
+    ang_to_bohr = 1.0 / 0.52917721067
+    extent_bohr = plane_extent * ang_to_bohr
+    u = np.linspace(-extent_bohr, extent_bohr, num_points)
+    v = np.linspace(-extent_bohr, extent_bohr, num_points)
+    U, V = np.meshgrid(u, v)
+
+    # XY plane: v1 = [1,0,0], v2 = [0,1,0]
+    v1_vec = np.array([1.0, 0.0, 0.0])
+    v2_vec = np.array([0.0, 1.0, 0.0])
+
+    all_densities = []
+    for z_pos in z_positions:
+      plane_origin = np.array([0.0, 0.0, z_pos])
+      points_on_plane = plane_origin + U[:, :, np.newaxis] * v1_vec + V[:, :, np.newaxis] * v2_vec
+      points = points_on_plane.reshape(-1, 3)
+      densities = self.calculate_density_at_points(points)
+      density_grid = densities.reshape(U.shape)
+      all_densities.append(density_grid)
+
+    # Calculate global vmin and vmax from original densities (before log)
+    # 元の密度（log変換前）からグローバルなvminとvmaxを計算
+    all_densities_flat = np.concatenate([d.ravel() for d in all_densities])
+    density_20th = np.percentile(all_densities_flat, 0.1)
+    density_80th = np.percentile(all_densities_flat, 99)
+    thres = 1.e-6
+
+    v_min = np.sign(density_20th) * np.log10(np.abs(density_20th / thres)) if np.abs(density_20th) >= thres else 0.0
+    v_max = np.sign(density_80th) * np.log10(np.abs(density_80th / thres)) if np.abs(density_80th) >= thres else 0.0
+    # Plot each slice
+    # 各スライスをプロット
+    print(f"Plotting {num_slices} slices...")
+
+    # Create custom colormap: white (transparent) to blue (opaque)
+    # カスタムカラーマップを作成: 白（透明）から青（不透明）へ
+    from matplotlib.colors import LinearSegmentedColormap
+    import matplotlib.cm as cm
+    blues_cmap = cm.get_cmap('Blues')
+    colors = [(0.01, 0.01, 0.01, 0.05),
+              (blues_cmap(0.01)[0], blues_cmap(0.01)[1], blues_cmap(0.01)[2], 0.01),
+              (blues_cmap(0.02)[0], blues_cmap(0.02)[1], blues_cmap(0.02)[2], 0.02),
+              (blues_cmap(0.05)[0], blues_cmap(0.05)[1], blues_cmap(0.05)[2], 0.03),
+              (blues_cmap(0.1)[0], blues_cmap(0.1)[1], blues_cmap(0.1)[2], 0.04),
+              (blues_cmap(0.2)[0], blues_cmap(0.2)[1], blues_cmap(0.2)[2], 0.05),
+              (blues_cmap(0.3)[0], blues_cmap(0.3)[1], blues_cmap(0.3)[2], 0.05),
+              (blues_cmap(0.4)[0], blues_cmap(0.4)[1], blues_cmap(0.4)[2], 0.05),
+              (blues_cmap(0.5)[0], blues_cmap(0.5)[1], blues_cmap(0.5)[2], 0.05),
+              (blues_cmap(0.6)[0], blues_cmap(0.6)[1], blues_cmap(0.6)[2], 0.05),
+              (blues_cmap(0.8)[0], blues_cmap(0.8)[1], blues_cmap(0.8)[2], 0.05),
+              (blues_cmap(0.9)[0], blues_cmap(0.9)[1], blues_cmap(0.9)[2], 0.05),
+              (blues_cmap(0.93)[0], blues_cmap(0.93)[1], blues_cmap(0.93)[2], 0.05),
+              (blues_cmap(0.96)[0], blues_cmap(0.96)[1], blues_cmap(0.96)[2], 0.05),
+              (blues_cmap(0.98)[0], blues_cmap(0.98)[1], blues_cmap(0.98)[2], 0.05),
+              (blues_cmap(1.0)[0], blues_cmap(1.0)[1], blues_cmap(1.0)[2], 0.2)]   # opaque
+    n_bins = 256
+    cmap_name = 'white_to_blue_transparent'
+    custom_cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
+
+    for i, (z_pos, density_grid) in enumerate(zip(z_positions, all_densities)):
+      # Apply log scale
+      # logスケールを適用
+      log_density_grid = self.conv_log_scale(density_grid.copy())
+
+      # Convert to Angstrom for plotting
+      # プロット用にオングストロームに変換
+      U_ang = U / ang_to_bohr
+      V_ang = V / ang_to_bohr
+      Z_plane = np.full_like(U_ang, z_pos)
+
+      # Normalize density for color mapping
+      # 色マッピングのために密度を正規化
+      normalized_density = (log_density_grid - v_min) / (v_max - v_min + 1e-11)
+      normalized_density = np.clip(normalized_density, 0, 1)  # Ensure [0, 1] range
+
+      # Plot with custom transparent colormap
+      # カスタム透明カラーマップでプロット
+      # ax.plot_surface(U_ang, V_ang, Z_plane, facecolors=custom_cmap(normalized_density),
+      #                shade=False, antialiased=False)
+      ax.plot_surface(U_ang, V_ang, Z_plane, facecolors=custom_cmap(normalized_density),
+                     shade=False, antialiased=True, linewidth=0)
+
+    # Plot atoms as spheres
+    # 原子を球として描画
+    for i, Z in enumerate(self.nuclear_numbers):
+      pos = self.geom_coordinates[i]
+      color, radius = self.get_atom_properties(Z)
+      color = "tab:red"
+
+      # Create sphere
+      # 球を作成
+      u_sphere = np.linspace(0, 2 * np.pi, 20)
+      v_sphere = np.linspace(0, np.pi, 15)
+      x_sphere = pos[0] + radius * np.outer(np.cos(u_sphere), np.sin(v_sphere))
+      y_sphere = pos[1] + radius * np.outer(np.sin(u_sphere), np.sin(v_sphere))
+      z_sphere = pos[2] + radius * np.outer(np.ones(np.size(u_sphere)), np.cos(v_sphere))
+
+      ax.plot_surface(x_sphere, y_sphere, z_sphere, color=color, alpha=1.0)
+
+    # Set labels
+    # ラベルを設定
+    ax.set_xlabel('x / Å', fontsize=12)
+    ax.set_ylabel('y / Å', fontsize=12)
+    ax.set_zlabel('z / Å', fontsize=12)
+
+    # ax.axis('off')
+
+    # Set aspect ratio
+    # アスペクト比を設定
+    ax.set_box_aspect([1, 1, (z_range[1] - z_range[0]) / (2 * plane_extent)])
+
+    # Save
+    # 保存
+    plt.savefig(output_file, format='pdf', dpi=600,bbox_inches='tight')
+    plt.close()
+
+    return output_file

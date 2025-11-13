@@ -160,6 +160,10 @@ def run_analysis(scf_object, analysis_params):
         vis.plot_density_xz_plane(y_position=0.0, output_file='density_xz_plane.pdf')
         vis.plot_density_yz_plane(x_position=0.0, output_file='density_yz_plane.pdf')
 
+        # Plot 3D slices for better 3D visualization
+        # より良い3D可視化のために3Dスライスをプロット
+        vis.plot_density_3d_slices(output_file='density_3d_slices.pdf')
+
         # Calculate and display elapsed time
         # 経過時間を計算して表示
         elapsed = time.perf_counter() - start
