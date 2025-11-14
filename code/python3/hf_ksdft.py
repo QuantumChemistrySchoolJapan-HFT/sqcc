@@ -125,6 +125,13 @@ class Calculator():
     # Restricted calculation (closed-shell)
     # 制限計算（閉殻系）
     if self.spin_multiplicity == 1:
+      # Check if number of electrons is even
+      # 電子数が偶数か確認
+      if self.num_electrons % 2 != 0:
+        raise ValueError(
+          f"Restricted calculation requires even number of electrons, but got {self.num_electrons}. "
+          f"Use spin_multiplicity > 1 for systems with odd number of electrons.")
+
       # Extract occupied MO coefficients
       # 占有軌道係数を抽出
       occupied_mo_coefficients = mo_coefficients[:, :int(self.num_electrons / 2)]
@@ -138,10 +145,25 @@ class Calculator():
     # Unrestricted calculation (open-shell)
     # 非制限計算（開殻系）
     else:
+      # Check physical consistency
+      # 物理的整合性を確認
+      # Even number of electrons: spin_multiplicity must be odd (singlet, triplet, ...)
+      # Odd number of electrons: spin_multiplicity must be even (doublet, quartet, ...)
+      # 偶数電子: spin_multiplicityは奇数（一重項、三重項、...）
+      # 奇数電子: spin_multiplicityは偶数（二重項、四重項、...）
+      if (self.num_electrons % 2 == 0 and self.spin_multiplicity % 2 == 0) or \
+         (self.num_electrons % 2 == 1 and self.spin_multiplicity % 2 == 1):
+        raise ValueError(
+          f"Inconsistent spin_multiplicity={self.spin_multiplicity} for {self.num_electrons} electrons. "
+          f"Even electrons require odd spin_multiplicity (1,3,5,...), "
+          f"odd electrons require even spin_multiplicity (2,4,6,...).")
+
       # Calculate the number of alpha and beta electrons
       # αおよびβ電子の数を計算
+      # spin_multiplicity = 2S + 1, where S = (N_alpha - N_beta)/2
+      # N_alpha - N_beta = 2S = spin_multiplicity - 1
       diff_num_alpha_and_beta_electrons = int(self.spin_multiplicity - 1)
-      num_base_electrons = int((self.num_electrons - diff_num_alpha_and_beta_electrons) / 2)
+      num_base_electrons = (self.num_electrons - diff_num_alpha_and_beta_electrons) // 2
       num_alpha_electrons = num_base_electrons + diff_num_alpha_and_beta_electrons
       num_beta_electrons = num_base_electrons
 
@@ -737,8 +759,10 @@ class Calculator():
     else:
       # Unrestricted: separate alpha and beta
       # 非制限系: αとβを分離
-      num_alpha = (self.num_electrons + self.spin_multiplicity - 1) // 2
-      num_beta = self.num_electrons - num_alpha
+      diff_num_alpha_and_beta_electrons = int(self.spin_multiplicity - 1)
+      num_base_electrons = (self.num_electrons - diff_num_alpha_and_beta_electrons) // 2
+      num_alpha = num_base_electrons + diff_num_alpha_and_beta_electrons
+      num_beta = num_base_electrons
 
       occupation_alpha = [1.0] * num_alpha + [0.0] * (self.num_ao - num_alpha)
       occupation_beta = [1.0] * num_beta + [0.0] * (self.num_ao - num_beta)
