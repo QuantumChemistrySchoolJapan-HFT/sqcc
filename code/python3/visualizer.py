@@ -8,8 +8,10 @@ on user-defined planes in 3D space using Psi4's built-in functionality.
 ユーザー定義平面上の電子密度を可視化する機能を提供します。
 """
 import numpy as np
+import json
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import interface_psi4 as ipsi4
 
 
 class DensityVisualizer():
@@ -49,12 +51,9 @@ class DensityVisualizer():
     Calculate electron density at given 3D points
     指定された3D点での電子密度を計算
 
-    Uses interface_psi4.generate_ao_values_at_grids for educational purposes
-    教育目的でinterface_psi4.generate_ao_values_at_gridsを使用
-
     Args:
         points: Array of 3D coordinates in Bohr (N x 3)
-               ボーア単位の3D座標配列 (N x 3)
+                ボーア単位の3D座標配列 (N x 3)
 
     Returns:
         Electron density at each point / 各点での電子密度
@@ -610,6 +609,254 @@ class DensityVisualizer():
     # Save
     # 保存
     plt.savefig(output_file, format='pdf', dpi=600,bbox_inches='tight')
+    plt.close()
+
+    return output_file
+
+
+  @classmethod
+  def from_mo_json(cls, json_file):
+    """
+    Create DensityVisualizer from MO data JSON file
+    MOデータJSONファイルからDensityVisualizerを作成
+
+    Args:
+        json_file: Path to mo_data.json / mo_data.jsonへのパス
+
+    Returns:
+        DensityVisualizer object / DensityVisualizerオブジェクト
+    """
+    # Load MO data from JSON
+    # JSONからMOデータを読み込む
+    with open(json_file, 'r') as f:
+      mo_data = json.load(f)
+
+    # Extract geometry information from AO info
+    # AO情報から構造情報を抽出
+    unique_atoms = {}
+    for ao in mo_data['ao_info']:
+      atom_idx = ao['atom_index']
+      if atom_idx not in unique_atoms:
+        unique_atoms[atom_idx] = {
+          'number': ao['atom_number'],
+          'coords': ao['atom_coords']
+        }
+
+    num_atoms = len(unique_atoms)
+    nuclear_numbers = np.zeros(num_atoms, dtype=int)
+    geom_coordinates = np.zeros((num_atoms, 3))
+
+    for idx in sorted(unique_atoms.keys()):
+      nuclear_numbers[idx] = unique_atoms[idx]['number']
+      geom_coordinates[idx] = unique_atoms[idx]['coords']
+
+    # Recreate mol_xyz string
+    # mol_xyz文字列を再作成
+    atom_symbols = {1: 'H', 6: 'C', 7: 'N', 8: 'O', 9: 'F', 15: 'P', 16: 'S', 17: 'Cl', 5: 'B'}
+    mol_xyz = f"{num_atoms}\n\n"
+    for idx in range(num_atoms):
+      symbol = atom_symbols.get(nuclear_numbers[idx], 'X')
+      mol_xyz += f"{symbol} {geom_coordinates[idx, 0]:.10f} {geom_coordinates[idx, 1]:.10f} {geom_coordinates[idx, 2]:.10f}\n"
+
+    # Recreate Psi4 interface
+    # Psi4インターフェースを再作成
+    psi4_interface = ipsi4.Psi4Interface(
+      mol_xyz,
+      nuclear_numbers,
+      geom_coordinates,
+      mo_data['basis_set'],
+      None  # No functional needed for density calculation
+    )
+
+    # Reconstruct density matrix from MO data
+    # MOデータから密度行列を再構築
+    if mo_data['calculation_type'] == 'restricted':
+      # Restricted: P = 2 * C_occ * C_occ^T
+      mo_coeffs = np.array(mo_data['mo_coefficients'])
+      occupation = np.array(mo_data['occupation_numbers'])
+      num_occupied = int(np.sum(occupation > 0.5))
+
+      C_occ = mo_coeffs[:, :num_occupied]
+      density_matrix = 2.0 * np.matmul(C_occ, C_occ.T)
+      spin_multiplicity = 1
+    else:
+      # Unrestricted: separate alpha and beta
+      alpha_coeffs = np.array(mo_data['alpha']['mo_coefficients'])
+      beta_coeffs = np.array(mo_data['beta']['mo_coefficients'])
+      alpha_occ = np.array(mo_data['alpha']['occupation_numbers'])
+      beta_occ = np.array(mo_data['beta']['occupation_numbers'])
+
+      num_alpha_occ = int(np.sum(alpha_occ > 0.5))
+      num_beta_occ = int(np.sum(beta_occ > 0.5))
+
+      C_alpha_occ = alpha_coeffs[:, :num_alpha_occ]
+      C_beta_occ = beta_coeffs[:, :num_beta_occ]
+
+      density_matrix = np.zeros((2, len(alpha_coeffs), len(alpha_coeffs)))
+      density_matrix[0] = np.matmul(C_alpha_occ, C_alpha_occ.T)
+      density_matrix[1] = np.matmul(C_beta_occ, C_beta_occ.T)
+      spin_multiplicity = mo_data['num_alpha'] - mo_data['num_beta'] + 1
+
+    # Create mock SCF result object
+    # SCF結果のモックオブジェクトを作成
+    class MockSCFResult:
+      pass
+
+    scf_result = MockSCFResult()
+    scf_result.nuclear_numbers = nuclear_numbers
+    scf_result.geom_coordinates = geom_coordinates
+    scf_result.density_matrix_in_ao_basis = density_matrix
+    scf_result.psi4_interface = psi4_interface
+    scf_result.spin_multiplicity = spin_multiplicity
+    scf_result.basis_set_object = psi4_interface.psi4_basis_set
+    scf_result.num_ao = mo_data['num_ao']
+
+    return cls(scf_result)
+
+
+  def plot_density_difference(self, other_visualizer,
+                             plane_origin=[0.0, 0.0, 0.0],
+                             plane_normal=[0.0, 0.0, 1.0],
+                             plane_extent=5.0, num_points=50,
+                             output_file='density_difference.pdf'):
+    """
+    Plot electron density difference: Δρ = ρ(this) - ρ(other)
+    電子密度差をプロット: Δρ = ρ(this) - ρ(other)
+
+    Args:
+        other_visualizer: Another DensityVisualizer object / 別のDensityVisualizerオブジェクト
+        plane_origin: Origin of the plane in Angstrom / 平面の原点（オングストローム）
+        plane_normal: Normal vector of the plane / 平面の法線ベクトル
+        plane_extent: Half-width of the plane in Angstrom / 平面の半幅（オングストローム）
+        num_points: Number of grid points in each direction / 各方向のグリッド点数
+        output_file: Output PDF file name / 出力PDFファイル名
+    """
+    ang_to_bohr = 1.0 / 0.52917721067
+
+    # Generate grid in plane coordinates
+    # 平面座標でグリッドを生成
+    u = np.linspace(-plane_extent, plane_extent, num_points) * ang_to_bohr
+    v = np.linspace(-plane_extent, plane_extent, num_points) * ang_to_bohr
+    U, V = np.meshgrid(u, v)
+
+    # Get orthonormal basis for the plane
+    # 平面の正規直交基底を取得
+    plane_normal = np.array(plane_normal, dtype=float)
+    plane_normal = plane_normal / np.linalg.norm(plane_normal)
+
+    # Choose basis vectors based on plane normal
+    # 平面の法線に基づいて基底ベクトルを選択
+    if np.allclose(np.abs(plane_normal), [0, 0, 1]):  # XY plane
+      v1 = np.array([1.0, 0.0, 0.0])
+      v2 = np.array([0.0, 1.0, 0.0])
+      xlabel = r'$x$ / Å'
+      ylabel = r'$y$ / Å'
+    elif np.allclose(np.abs(plane_normal), [0, 1, 0]):  # XZ plane
+      v1 = np.array([1.0, 0.0, 0.0])
+      v2 = np.array([0.0, 0.0, 1.0])
+      xlabel = r'$x$ / Å'
+      ylabel = r'$z$ / Å'
+    elif np.allclose(np.abs(plane_normal), [1, 0, 0]):  # YZ plane
+      v1 = np.array([0.0, 1.0, 0.0])
+      v2 = np.array([0.0, 0.0, 1.0])
+      xlabel = r'$y$ / Å'
+      ylabel = r'$z$ / Å'
+    else:
+      # Arbitrary plane
+      if abs(plane_normal[2]) < 0.9:
+        v1 = np.cross(plane_normal, [0, 0, 1])
+      else:
+        v1 = np.cross(plane_normal, [1, 0, 0])
+      v1 = v1 / np.linalg.norm(v1)
+      v2 = np.cross(plane_normal, v1)
+      xlabel = r'$u$ / Å'
+      ylabel = r'$v$ / Å'
+
+    # Convert plane origin to Bohr
+    # 平面の原点をボーアに変換
+    plane_origin_bohr = np.array(plane_origin) * ang_to_bohr
+
+    # Calculate 3D coordinates of grid points
+    # グリッド点の3D座標を計算
+    points = np.zeros((num_points * num_points, 3))
+    for i in range(num_points):
+      for j in range(num_points):
+        idx = i * num_points + j
+        points[idx] = plane_origin_bohr + U[i, j] * v1 + V[i, j] * v2
+
+    # Calculate densities at grid points
+    # グリッド点で密度を計算
+    print("Calculating electron density for system 1...")
+    print("システム1の電子密度を計算中...")
+    density1 = self.calculate_density_at_points(points)
+
+    print("Calculating electron density for system 2...")
+    print("システム2の電子密度を計算中...")
+    density2 = other_visualizer.calculate_density_at_points(points)
+
+    # Calculate difference
+    # 差分を計算
+    density_diff = (density1 - density2).reshape((num_points, num_points))
+
+    # Plot
+    # プロット
+    plt.rcParams['xtick.direction'] = 'in'
+    plt.rcParams['ytick.direction'] = 'in'
+    plt.rcParams["xtick.major.size"] = 8
+    plt.rcParams["ytick.major.size"] = 8
+
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111)
+
+    U_ang = U / ang_to_bohr
+    V_ang = V / ang_to_bohr
+
+    # Use symmetric color scale around zero
+    # ゼロを中心とした対称的な色スケールを使用
+    vmax = np.max(np.abs(density_diff))
+    if vmax < 1e-10:
+      vmax = 1e-10
+    levels = np.linspace(-vmax, vmax, 41)
+
+    contour = ax.contourf(U_ang, V_ang, density_diff, levels=levels,
+                         cmap='RdBu_r', extend='both')
+
+    cbar = plt.colorbar(contour, ax=ax, format='%.2e')
+    cbar.set_label(r'$\Delta\rho$ [e/Bohr³]', fontsize=12)
+
+    # Draw atoms from the first system
+    # 最初のシステムの原子を描画
+    for i, Z in enumerate(self.nuclear_numbers):
+      atom_pos = self.geom_coordinates[i]
+      atom_pos_bohr = atom_pos * ang_to_bohr
+      relative_pos = atom_pos_bohr - plane_origin_bohr
+
+      # Check if atom is close to the plane
+      # 原子が平面に近いか確認
+      distance_to_plane = abs(np.dot(relative_pos, plane_normal))
+      if distance_to_plane < 0.5:
+        u_coord = np.dot(relative_pos, v1) / ang_to_bohr
+        v_coord = np.dot(relative_pos, v2) / ang_to_bohr
+
+        color, radius = self.get_atom_properties(Z)
+        circle = patches.Circle(
+          (u_coord, v_coord), radius,
+          fc=color, ec='black', linewidth=1.5, alpha=1.0
+        )
+        ax.add_patch(circle)
+
+    ax.set_xlabel(xlabel, fontsize=16)
+    ax.set_ylabel(ylabel, fontsize=16)
+    ax.tick_params(labelsize=14)
+    ax.set_title(r'Electron Density Difference: $\Delta\rho = \rho_1 - \rho_2$', fontsize=14)
+    ax.set_aspect('equal')
+    ax.set_xlim(-plane_extent, plane_extent)
+    ax.set_ylim(-plane_extent, plane_extent)
+
+    plt.tight_layout()
+    plt.savefig(output_file, format='pdf', dpi=300, bbox_inches='tight')
+    print(f"Density difference plot saved to {output_file}")
+    print(f"密度差分プロットを {output_file} に保存しました")
     plt.close()
 
     return output_file

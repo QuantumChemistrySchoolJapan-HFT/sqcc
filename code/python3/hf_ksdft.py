@@ -8,6 +8,7 @@ for both Hartree-Fock and Kohn-Sham DFT methods.
 自己無撞着場(SCF)計算を実装します。
 """
 import numpy as np
+import json
 import interface_psi4 as ipsi4
 import ksdft_functional as kdf
 
@@ -673,3 +674,101 @@ class Calculator():
     # Call Mulliken charge calculation
     # Mulliken電荷計算を呼び出す
     calc_mulliken_atomic_charges(density_matrix_in_ao_basis, ao_overlap_integral)
+
+
+  def save_mo_data_to_json(self, output_file='mo_data.json'):
+    """
+    Save MO coefficients, AO information, and occupation numbers to JSON file
+    MO係数、AO情報、占有数をJSONファイルに保存
+
+    Args:
+        output_file: Output JSON file name / 出力JSONファイル名
+    """
+    # Get AO information from Psi4 basis set
+    # Psi4基底関数セットからAO情報を取得
+    ao_info = []
+    basis_set = self.basis_set_object
+
+    for shell_idx in range(basis_set.nshell()):
+      shell = basis_set.shell(shell_idx)
+      atom_idx = shell.ncenter
+      atom_number = self.nuclear_numbers[atom_idx]
+      atom_coords = self.geom_coordinates[atom_idx].tolist()
+
+      # Get angular momentum (s=0, p=1, d=2, etc.)
+      # 角運動量を取得 (s=0, p=1, d=2, など)
+      am = shell.am
+      am_symbol = ['S', 'P', 'D', 'F', 'G', 'H', 'I'][am]
+
+      # Number of basis functions in this shell
+      # このシェル内の基底関数の数
+      nfunction = shell.nfunction
+
+      for func_idx in range(nfunction):
+        ao_info.append({
+          'atom_index': int(atom_idx),
+          'atom_number': int(atom_number),
+          'atom_coords': atom_coords,
+          'shell_type': am_symbol,
+          'angular_momentum': int(am),
+          'function_index': int(func_idx)
+        })
+
+    # Calculate occupation numbers
+    # 占有数を計算
+    if self.spin_multiplicity == 1:
+      # Restricted: 2 electrons per occupied orbital
+      # 制限系: 占有軌道あたり2電子
+      num_occupied = self.num_electrons // 2
+      occupation = [2.0] * num_occupied + [0.0] * (self.num_ao - num_occupied)
+
+      mo_data = {
+        'calculation_type': 'restricted',
+        'num_electrons': int(self.num_electrons),
+        'num_ao': int(self.num_ao),
+        'num_mo': int(self.num_ao),
+        'basis_set': self.basis_set_name,
+        'functional': self.ksdft_functional_name if self.ksdft_functional_name else 'HF',
+        'ao_info': ao_info,
+        'mo_energies': self.mo_energies.tolist(),
+        'mo_coefficients': self.mo_coefficients.tolist(),
+        'occupation_numbers': occupation
+      }
+    else:
+      # Unrestricted: separate alpha and beta
+      # 非制限系: αとβを分離
+      num_alpha = (self.num_electrons + self.spin_multiplicity - 1) // 2
+      num_beta = self.num_electrons - num_alpha
+
+      occupation_alpha = [1.0] * num_alpha + [0.0] * (self.num_ao - num_alpha)
+      occupation_beta = [1.0] * num_beta + [0.0] * (self.num_ao - num_beta)
+
+      mo_data = {
+        'calculation_type': 'unrestricted',
+        'num_electrons': int(self.num_electrons),
+        'num_alpha': int(num_alpha),
+        'num_beta': int(num_beta),
+        'num_ao': int(self.num_ao),
+        'num_mo': int(self.num_ao),
+        'basis_set': self.basis_set_name,
+        'functional': self.ksdft_functional_name if self.ksdft_functional_name else 'HF',
+        'ao_info': ao_info,
+        'alpha': {
+          'mo_energies': self.mo_energies[0].tolist(),
+          'mo_coefficients': self.mo_coefficients[0].tolist(),
+          'occupation_numbers': occupation_alpha
+        },
+        'beta': {
+          'mo_energies': self.mo_energies[1].tolist(),
+          'mo_coefficients': self.mo_coefficients[1].tolist(),
+          'occupation_numbers': occupation_beta
+        }
+      }
+
+    # Save to JSON file
+    # JSONファイルに保存
+    with open(output_file, 'w') as f:
+      json.dump(mo_data, f, indent=2)
+
+    print(f"MO data saved to {output_file}")
+    print(f"MOデータを {output_file} に保存しました")

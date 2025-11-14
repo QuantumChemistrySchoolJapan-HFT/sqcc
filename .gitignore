@@ -1,5 +1,6 @@
 *.pyc
 *.dat
 *.pdf
+*.json
 test_*.py
 __pycache__/

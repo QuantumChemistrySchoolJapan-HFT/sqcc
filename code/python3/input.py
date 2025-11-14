@@ -287,6 +287,9 @@ def get_analysis_params(
     # 解析パラメータの辞書をデフォルト値で初期化
     analysis_params = {
         'electron_density': False,
+        'electron_density_difference': False,
+        'mo_file1': None,
+        'mo_file2': None,
     }
 
     # Check if 'analysis' section exists
@@ -296,6 +299,17 @@ def get_analysis_params(
         # 電子密度可視化フラグを取得
         electron_density_str = sqc_conf['analysis'].get('electron_density', 'false').lower()
         analysis_params['electron_density'] = (electron_density_str == 'true')
+
+        # Get electron density difference visualization flag
+        # 電子密度差分可視化フラグを取得
+        density_diff_str = sqc_conf['analysis'].get('electron_density_difference', 'false').lower()
+        analysis_params['electron_density_difference'] = (density_diff_str == 'true')
+
+        # Get MO file paths for density difference calculation
+        # 密度差分計算用のMOファイルパスを取得
+        if analysis_params['electron_density_difference']:
+            analysis_params['mo_file1'] = sqc_conf['analysis'].get('mo_file1', None)
+            analysis_params['mo_file2'] = sqc_conf['analysis'].get('mo_file2', None)
 
     return analysis_params
 
