@@ -390,7 +390,7 @@ class DensityVisualizer():
     # Save figure as PDF
     # 図をPDFとして保存
     plt.tight_layout()
-    plt.savefig(output_file, format='pdf', dpi=900)
+    plt.savefig(output_file, format='pdf', dpi=600, bbox_inches='tight')
     print("Density plot saved to %s" % output_file)
     print("密度プロットを %s に保存しました" % output_file)
     plt.close()
@@ -854,7 +854,7 @@ class DensityVisualizer():
     ax.set_ylim(-plane_extent, plane_extent)
 
     plt.tight_layout()
-    plt.savefig(output_file, format='pdf', dpi=300, bbox_inches='tight')
+    plt.savefig(output_file, format='pdf', dpi=600, bbox_inches='tight')
     print(f"Density difference plot saved to {output_file}")
     print(f"密度差分プロットを {output_file} に保存しました")
     plt.close()
