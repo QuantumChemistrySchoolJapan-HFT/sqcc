@@ -5,7 +5,7 @@ Japanese follows English.
 英語の後に日本語の説明があります。
 
 ## Feature 特徴
-SQCC is a super simple quantum chemistry code written in Python3 and Fortran90.
+SQCC is a super simple quantum chemistry code written in Python3 (and Fortran90).
 It is developed for educational purposes. The main purpose of this code is to
 provide a simple, but general implementation of quantum chemistry methods that
 can be easily understood and modified by users.
@@ -24,11 +24,11 @@ The following quantum chemistry methods are implemented in this code:
 - Configuration interaction singles (CIS) theory and excited-state calculations
 - Second-order Møller-Plesset perturbation theory (MP2)
 - Kohn-Sham density functional theory (KS-DFT) with local density approximation (LDA) (restricted and unrestricted)
-- Electrostatic embedding QM/MM calculations with RHF, UHF, RKS, and UKS
+- Electrostatic embedding QM/MM calculations with RHF, UHF, RKS, UKS, CIS, and MP2
 
 Note that only the exchange energy and potential of the local density approximation (LDA) are implemented in the current version.
 
-SQCCは、Python3とFortran90で書かれた非常に単純な量子化学計算コードです。
+SQCCは、Python3（とFortran90）で書かれた非常に単純な量子化学計算コードです。
 教育目的で開発されており、ユーザーが簡単に理解し、修正できるような単純で一般的な量子化学手法の実装を提供することを主な目的としています。
 SQCCは、高い計算性能や効率というよりも、教科書に載っているような式をそのまま実装することに重点を置いています。
 しかしながら、ほとんど全ての基底関数をサポートし、原理的には全ての分子と物質に適用可能です。
@@ -41,7 +41,7 @@ SQCCは、そのようなソフトウェア開発を学ぶための出発点と�
 - 単一励起配置相互作用（CIS）理論と励起状態計算
 - MP2理論
 - 局所密度近似（LDA）を用いたコーン・シャム密度汎関数理論（KS-DFT）（制限および非制限）
-- 静電埋め込みQM/MM計算（RHF、UHF、RKS、UKS）
+- 静電埋め込みQM/MM計算（RHF、UHF、RKS、UKS、CIS、MP2）
 
 注意：現在のバージョンでは、局所密度近似（LDA）の交換エネルギーとポテンシャルのみが実装されています。
 
@@ -54,7 +54,7 @@ cd sqcc
 conda create -n sqcc_env psi4 numpy scipy matplotlib pandas -c conda-forge/label/libint_dev -c conda-forge
 ```
 
-## For biginners 初心者向け
+## For beginners 初心者向け
 We assume that you can use a terminal in your operating system.
 If your operating system is Windows, we recommend using WSL (Windows Subsystem for Linux).
 If your operating system is MacOS or Linux, you can use the terminal directly.
@@ -98,6 +98,10 @@ spin_multiplicity = 1
 
 For more details, see the example files in the `tests` directory.  
 詳細については、`tests`ディレクトリ内のサンプルファイルを参照してください。
+
+For the xyz file format, see the following link:  
+xyzファイルフォーマットについては、以下のリンクを参照してください：  
+https://en.wikipedia.org/wiki/XYZ_file_format
 
 ## Dependencies 依存関係
 Psi4: for AO integral and for generating numerical grids and weights
