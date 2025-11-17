@@ -166,13 +166,13 @@ def run_analysis(scf_object, analysis_params):
 
             # Plot density on XY, XZ, and YZ planes
             # XY、XZ、YZ平面で密度をプロット
-            vis.plot_density_xy_plane(z_position=0.0, output_file='density_xy_plane.pdf')
-            vis.plot_density_xz_plane(y_position=0.0, output_file='density_xz_plane.pdf')
-            vis.plot_density_yz_plane(x_position=0.0, output_file='density_yz_plane.pdf')
+            vis.plot_density_xy_plane(z_position=0.0, output_file='density_xy_plane.svg')
+            vis.plot_density_xz_plane(y_position=0.0, output_file='density_xz_plane.svg')
+            vis.plot_density_yz_plane(x_position=0.0, output_file='density_yz_plane.svg')
 
             # Plot 3D slices for better 3D visualization
             # より良い3D可視化のために3Dスライスをプロット
-            vis.plot_density_3d_slices(output_file='density_3d_slices.pdf')
+            vis.plot_density_3d_slices(output_file='density_3d_slices.svg')
 
             # Calculate and display elapsed time
             # 経過時間を計算して表示
@@ -212,19 +212,19 @@ def run_analysis(scf_object, analysis_params):
             print("XY平面で密度差分をプロット中...")
             vis1.plot_density_difference(vis2, plane_origin=[0.0, 0.0, 0.0],
                                         plane_normal=[0.0, 0.0, 1.0],
-                                        output_file='density_difference_xy.pdf')
+                                        output_file='density_difference_xy.svg')
 
             print("Plotting density difference on XZ plane...")
             print("XZ平面で密度差分をプロット中...")
             vis1.plot_density_difference(vis2, plane_origin=[0.0, 0.0, 0.0],
                                         plane_normal=[0.0, 1.0, 0.0],
-                                        output_file='density_difference_xz.pdf')
+                                        output_file='density_difference_xz.svg')
 
             print("Plotting density difference on YZ plane...")
             print("YZ平面で密度差分をプロット中...")
             vis1.plot_density_difference(vis2, plane_origin=[0.0, 0.0, 0.0],
                                         plane_normal=[1.0, 0.0, 0.0],
-                                        output_file='density_difference_yz.pdf')
+                                        output_file='density_difference_yz.svg')
 
             # Calculate and display elapsed time
             # 経過時間を計算して表示

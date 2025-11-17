@@ -198,7 +198,8 @@ class DensityVisualizer():
 
 
   def plot_density_on_plane(self, plane_origin, plane_normal, plane_extent=5.0,
-                           num_points=50, output_file='density_plane.pdf'):
+                           num_points=50, output_file='density_plane.svg'):
+    num_points=1000
     """
     Plot electron density on an arbitrary plane
     任意の平面上の電子密度をプロット
@@ -210,7 +211,7 @@ class DensityVisualizer():
                      平面の法線ベクトル（3D配列、正規化されます）
         plane_extent: Half-width of the plane in Angstrom / 平面の半幅（オングストローム）
         num_points: Number of grid points in each direction / 各方向のグリッド点数
-        output_file: Output PDF file name / 出力PDFファイル名
+        output_file: Output svg file name / 出力svgファイル名
     """
     # Convert Angstrom to Bohr
     # オングストロームをボーアに変換
@@ -340,12 +341,13 @@ class DensityVisualizer():
     # Plot density as contour map in log10 scale
     # 密度をlog10スケールで等高線図としてプロット
     contour = ax.contourf(U_ang, V_ang, log_density_grid, contour_range, cmap=map_color, extend='both',
-                          vmin=1.5, vmax=5.5)
+                          vmin=1, vmax=6)
 
     # Add colorbar
     # カラーバーを追加
     cbar = plt.colorbar(contour, ax=ax, ticks=contour_range[::2], format='%1.2f')
-    cbar.set_label('log₁₀(ρ/10⁻⁶) [e/Bohr³]', fontsize=12)
+    cbar.set_label(r'$\log_{10}\left(\frac{\rho}{10^{-6}}\right)$', fontsize=16)
+    cbar.ax.tick_params(labelsize=14)
 
     # Draw atoms on the plane
     # 平面上に原子を描画
@@ -367,6 +369,8 @@ class DensityVisualizer():
         # 原子番号に基づいて原子の色と半径を取得
         atom_color, atom_radius = self.get_atom_properties(atom_number)
 
+        atom_color = "tab:red"
+
         atom = patches.Circle(
           xy=[u_coord / ang_to_bohr, v_coord / ang_to_bohr],
           radius=atom_radius,
@@ -377,9 +381,9 @@ class DensityVisualizer():
         )
         ax.add_patch(atom)    # Labels and title
     # ラベルとタイトル
-    ax.set_xlabel(xlabel, fontsize=16)
-    ax.set_ylabel(ylabel, fontsize=16)
-    ax.tick_params(labelsize=14)
+    ax.set_xlabel(xlabel, fontsize=20)
+    ax.set_ylabel(ylabel, fontsize=20)
+    ax.tick_params(labelsize=16)
     ax.set_aspect('equal')
 
     # Set axis limits
@@ -387,10 +391,10 @@ class DensityVisualizer():
     ax.set_xlim(-plane_extent, plane_extent)
     ax.set_ylim(-plane_extent, plane_extent)
 
-    # Save figure as PDF
-    # 図をPDFとして保存
+    # Save figure as svg
+    # 図をsvgとして保存
     plt.tight_layout()
-    plt.savefig(output_file, format='pdf', dpi=600, bbox_inches='tight')
+    plt.savefig(output_file, format='svg', dpi=600, bbox_inches='tight')
     print("Density plot saved to %s" % output_file)
     print("密度プロットを %s に保存しました" % output_file)
     plt.close()
@@ -399,7 +403,7 @@ class DensityVisualizer():
 
 
   def plot_density_xy_plane(self, z_position=0.0, plane_extent=5.0,
-                           num_points=50, output_file='density_xy.pdf'):
+                           num_points=50, output_file='density_xy.svg'):
     """
     Plot electron density on XY plane at given Z coordinate
     指定されたZ座標のXY平面上の電子密度をプロット
@@ -408,7 +412,7 @@ class DensityVisualizer():
         z_position: Z coordinate of the plane in Angstrom / 平面のZ座標（オングストローム）
         plane_extent: Half-width of the plane in Angstrom / 平面の半幅（オングストローム）
         num_points: Number of grid points in each direction / 各方向のグリッド点数
-        output_file: Output PDF file name / 出力PDFファイル名
+        output_file: Output svg file name / 出力svgファイル名
     """
     return self.plot_density_on_plane(
       plane_origin=[0.0, 0.0, z_position],
@@ -419,7 +423,7 @@ class DensityVisualizer():
 
 
   def plot_density_xz_plane(self, y_position=0.0, plane_extent=5.0,
-                           num_points=50, output_file='density_xz.pdf'):
+                           num_points=50, output_file='density_xz.svg'):
     """
     Plot electron density on XZ plane at given Y coordinate
     指定されたY座標のXZ平面上の電子密度をプロット
@@ -428,7 +432,7 @@ class DensityVisualizer():
         y_position: Y coordinate of the plane in Angstrom / 平面のY座標（オングストローム）
         plane_extent: Half-width of the plane in Angstrom / 平面の半幅（オングストローム）
         num_points: Number of grid points in each direction / 各方向のグリッド点数
-        output_file: Output PDF file name / 出力PDFファイル名
+        output_file: Output svg file name / 出力svgファイル名
     """
     return self.plot_density_on_plane(
       plane_origin=[0.0, y_position, 0.0],
@@ -439,7 +443,7 @@ class DensityVisualizer():
 
 
   def plot_density_yz_plane(self, x_position=0.0, plane_extent=5.0,
-                           num_points=50, output_file='density_yz.pdf'):
+                           num_points=50, output_file='density_yz.svg'):
     """
     Plot electron density on YZ plane at given X coordinate
     指定されたX座標のYZ平面上の電子密度をプロット
@@ -448,7 +452,7 @@ class DensityVisualizer():
         x_position: X coordinate of the plane in Angstrom / 平面のX座標（オングストローム）
         plane_extent: Half-width of the plane in Angstrom / 平面の半幅（オングストローム）
         num_points: Number of grid points in each direction / 各方向のグリッド点数
-        output_file: Output PDF file name / 出力PDFファイル名
+        output_file: Output svg file name / 出力svgファイル名
     """
     return self.plot_density_on_plane(
       plane_origin=[x_position, 0.0, 0.0],
@@ -459,7 +463,7 @@ class DensityVisualizer():
 
   def plot_density_3d_slices(self, num_slices=12, z_range=None,
                             plane_extent=1.5, num_points=200,
-                            output_file='density_3d_slices.pdf'):
+                            output_file='density_3d_slices.svg'):
     """
     Plot multiple XY plane slices in 3D to show density structure
     3D密度構造を示すために複数のXY平面スライスを3Dでプロット
@@ -469,7 +473,7 @@ class DensityVisualizer():
         z_range: (z_min, z_max) range in Angstrom, or None for auto / z範囲（オングストローム）、Noneで自動
         plane_extent: Half-width of each plane in Angstrom / 各平面の半幅（オングストローム）
         num_points: Number of grid points in each direction / 各方向のグリッド点数
-        output_file: Output PDF file name / 出力PDFファイル名
+        output_file: Output svg file name / 出力svgファイル名
     """
     # Set up z range automatically if not provided
     # z範囲が指定されていない場合は自動設定
@@ -596,9 +600,9 @@ class DensityVisualizer():
 
     # Set labels
     # ラベルを設定
-    ax.set_xlabel('x / Å', fontsize=12)
-    ax.set_ylabel('y / Å', fontsize=12)
-    ax.set_zlabel('z / Å', fontsize=12)
+    ax.set_xlabel('x / Å', fontsize=16)
+    ax.set_ylabel('y / Å', fontsize=16)
+    ax.set_zlabel('z / Å', fontsize=16)
 
     # ax.axis('off')
 
@@ -608,7 +612,7 @@ class DensityVisualizer():
 
     # Save
     # 保存
-    plt.savefig(output_file, format='pdf', dpi=600,bbox_inches='tight')
+    plt.savefig(output_file, format='svg', dpi=600,bbox_inches='tight')
     plt.close()
 
     return output_file
@@ -718,10 +722,11 @@ class DensityVisualizer():
                              plane_origin=[0.0, 0.0, 0.0],
                              plane_normal=[0.0, 0.0, 1.0],
                              plane_extent=5.0, num_points=50,
-                             output_file='density_difference.pdf'):
+                             output_file='density_difference.svg'):
+    num_points=1000
     """
-    Plot electron density difference: Δρ = ρ(this) - ρ(other)
-    電子密度差をプロット: Δρ = ρ(this) - ρ(other)
+    Plot electron density difference: Δρ = ρ(other) - ρ(this)
+    電子密度差をプロット: Δρ = ρ(other) - ρ(this)
 
     Args:
         other_visualizer: Another DensityVisualizer object / 別のDensityVisualizerオブジェクト
@@ -729,7 +734,7 @@ class DensityVisualizer():
         plane_normal: Normal vector of the plane / 平面の法線ベクトル
         plane_extent: Half-width of the plane in Angstrom / 平面の半幅（オングストローム）
         num_points: Number of grid points in each direction / 各方向のグリッド点数
-        output_file: Output PDF file name / 出力PDFファイル名
+        output_file: Output svg file name / 出力svgファイル名
     """
     ang_to_bohr = 1.0 / 0.52917721067
 
@@ -794,9 +799,13 @@ class DensityVisualizer():
     print("システム2の電子密度を計算中...")
     density2 = other_visualizer.calculate_density_at_points(points)
 
-    # Calculate difference
-    # 差分を計算
-    density_diff = (density1 - density2).reshape((num_points, num_points))
+    # Calculate difference: rho2 - rho1
+    # 差分を計算: rho2 - rho1
+    density_diff = (density2 - density1).reshape((num_points, num_points))
+
+    # Apply log10 scale using the same method as regular density plots
+    # 通常の密度プロットと同じ方法でlog10スケールを適用
+    log_density_diff = self.conv_log_scale(density_diff.copy())
 
     # Plot
     # プロット
@@ -811,18 +820,19 @@ class DensityVisualizer():
     U_ang = U / ang_to_bohr
     V_ang = V / ang_to_bohr
 
-    # Use symmetric color scale around zero
-    # ゼロを中心とした対称的な色スケールを使用
-    vmax = np.max(np.abs(density_diff))
-    if vmax < 1e-10:
-      vmax = 1e-10
+    # Use symmetric color scale around zero for log scale
+    # log10スケールでゼロを中心とした対称的な色スケールを使用
+    vmax = np.max(np.abs(log_density_diff))
+    if vmax < 0.1:
+      vmax = 0.1
     levels = np.linspace(-vmax, vmax, 41)
 
-    contour = ax.contourf(U_ang, V_ang, density_diff, levels=levels,
-                         cmap='RdBu_r', extend='both')
+    contour = ax.contourf(U_ang, V_ang, log_density_diff, levels=levels,
+                         cmap='RdBu', extend='both')
 
-    cbar = plt.colorbar(contour, ax=ax, format='%.2e')
-    cbar.set_label(r'$\Delta\rho$ [e/Bohr³]', fontsize=12)
+    cbar = plt.colorbar(contour, ax=ax, format='%.1f')
+    cbar.set_label(r'$\mathrm{sgn}(\Delta\rho) \cdot \log_{10}\left(\frac{|\Delta\rho|}{10^{-6}}\right)$', fontsize=16)
+    cbar.ax.tick_params(labelsize=14)
 
     # Draw atoms from the first system
     # 最初のシステムの原子を描画
@@ -845,16 +855,16 @@ class DensityVisualizer():
         )
         ax.add_patch(circle)
 
-    ax.set_xlabel(xlabel, fontsize=16)
-    ax.set_ylabel(ylabel, fontsize=16)
-    ax.tick_params(labelsize=14)
-    ax.set_title(r'Electron Density Difference: $\Delta\rho = \rho_1 - \rho_2$', fontsize=14)
+    ax.set_xlabel(xlabel, fontsize=20)
+    ax.set_ylabel(ylabel, fontsize=20)
+    ax.tick_params(labelsize=16)
+    # ax.set_title(r'Electron Density Difference: $\Delta\rho = \rho_2 - \rho_1$ (log scale)', fontsize=14)
     ax.set_aspect('equal')
     ax.set_xlim(-plane_extent, plane_extent)
     ax.set_ylim(-plane_extent, plane_extent)
 
     plt.tight_layout()
-    plt.savefig(output_file, format='pdf', dpi=600, bbox_inches='tight')
+    plt.savefig(output_file, format='svg', dpi=600, bbox_inches='tight')
     print(f"Density difference plot saved to {output_file}")
     print(f"密度差分プロットを {output_file} に保存しました")
     plt.close()
