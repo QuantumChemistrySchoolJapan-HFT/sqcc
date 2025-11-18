@@ -636,8 +636,18 @@ class Calculator():
     ### ポストハートリー・フォック計算のためにSCF結果を保存
     self.density_matrix_in_ao_basis = density_matrix_in_ao_basis
     self.num_ao = num_ao
-    self.mo_energies = orbital_energies
-    self.mo_coefficients = mo_coefficients
+
+    # Save orbital energies correctly for both restricted and unrestricted
+    # 制限系と非制限系の両方で軌道エネルギーを正しく保存
+    if self.spin_multiplicity == 1:
+      self.mo_energies = orbital_energies
+      self.mo_coefficients = mo_coefficients
+    else:
+      # For unrestricted calculation, save alpha and beta orbital energies as array
+      # 非制限計算の場合、αとβの軌道エネルギーを配列として保存
+      self.mo_energies = np.array([alpha_orbital_energies, beta_orbital_energies])
+      self.mo_coefficients = mo_coefficients  # Already set correctly in loop
+
     self.scf_energy = total_energy
     self.ao_electron_repulsion_integral = ao_electron_repulsion_integral
 
