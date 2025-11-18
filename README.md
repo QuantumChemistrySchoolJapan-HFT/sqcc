@@ -1,14 +1,33 @@
 # SQCC
 SQCC (Simple Quantum Chemistry Code)
 
+<div align="center">
+  <img src="./logo.png" alt="SQCC Logo" width="auto" height="auto">
+</div>
+
 ---
+
 This README contains both English and Japanese descriptions.  
 Japanese description follows the English description.
 
 このREADMEには英語と日本語の説明が含まれています。  
 日本語での説明は英語の説明の後にあります。
 
+
+## Table of Contents / 目次
+
+- [English](#english)
+  - [Features](#features)
+  - [Installation](#installation)
+  - [Quick Start](#quick-start)
+  - [Documentation](#documentation)
+- [日本語](#日本語)
+  - [特徴](#特徴)
+  - [インストール](#インストール)
+  - [クイックスタート](#クイックスタート)
+  - [ドキュメント](#ドキュメント)
 ---
+
 
 ## English
 
@@ -108,6 +127,14 @@ Most of the equations shown in the comments are from "Modern Quantum Chemistry".
 - R G. Parr, W. Yang, Density-Functional Theory of Atoms and Molecules, Oxford Science Publications (1989).
 - D. Cook, Handbook of Computational Chemistry, Oxford University Press (1998).
 
+### Contributors
+- Takafumi Shiraogawa (Human)
+- Claude Sonnet 4.5 (AI)
+- ChatGPT-5.1-Codex (AI)
+
+### Acknowledgments
+T.S. would like to express his sincere gratitude to GitHub and Microsoft for providing excellent AI for free.
+
 ---
 
 ## 日本語
@@ -201,3 +228,12 @@ MITライセンスは、マサチューセッツ工科大学（MIT）に由来�
 - Frank Jensen, "Introduction to Computational Chemistry"（和訳：「計算化学」）
 - R G. Parr, W. Yang, Density-Functional Theory of Atoms and Molecules, Oxford Science Publications (1989).
 - D. Cook, Handbook of Computational Chemistry, Oxford University Press (1998).
+
+### 貢献者
+- 白男川貴史（人間）
+- Claude Sonnet 4.5（人工知能）
+- ChatGPT-5.1-Codex（人工知能）
+
+
+### 謝辞
+素晴らしいAIを無料で提供してくださったGithub社とMicrosoft社に心より感謝申し上げます。
