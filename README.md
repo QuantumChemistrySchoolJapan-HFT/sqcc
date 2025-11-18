@@ -93,6 +93,10 @@ ksdft_functional = lda
 molecular_charge = 0
 # 2S+1
 spin_multiplicity = 1
+# spin_orbital_treatment can be added as follows:
+# spin_orbital_treatment = restricted
+# or
+# spin_orbital_treatment = unrestricted
 ```
 "#" indicates a comment line.  
 "#"はコメント行を示します。
@@ -125,3 +129,14 @@ Moreover, most of plotting tools are generated with Claude Sonnet 4.5 and may co
 
 コードのコメントの大部分は、私の古いコードのそれらを元にAI（Claude Sonnet 4.5）を使用して生成・修正したものであり、その正確性を保証するものではありません。
 さらに、プロットツールの大部分はClaude Sonnet 4.5で生成されており、いくつかの誤りが含まれている可能性があります。
+
+
+## References 参考文献
+Most of the equations shown in the comments are from "Modern Quantum Chemistry".
+コメントに示したほとんどの式は、"Modern Quantum Chemistry"に記載されています。
+
+- Attila Szabo, Neil S. Ostlund, “Modern Quantum Chemistry: Introduction to Advanced Electronic Structure Theory"（和訳：「新しい量子化学」）
+- 中井浩巳、「手で解く量子化学 I、 II」
+- Frank Jensen, “Introduction to Computational Chemistry”（和訳：「計算化学」）
+- R G. Parr, W. Yang, Density-Functional Theory of Atoms and Molecules, Oxford Science Publications (1989).
+- D. Cook, Handbook of Computational Chemistry, Oxford University Press (1998).
