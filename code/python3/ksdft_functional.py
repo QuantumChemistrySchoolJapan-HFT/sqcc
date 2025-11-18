@@ -86,8 +86,6 @@ def lda_energy(electron_density_at_grids, grid_weights):
 
   # Numerical integration: ∫ ρ^(4/3) dr ≈ Σ_n w_n * ρ_n^(4/3)
   # 数値積分: ∫ ρ^(4/3) dr ≈ Σ_n w_n * ρ_n^(4/3)
-  # Replace einsum with explicit sum for clarity
-  # 明確にするためeinsumを明示的な和に置き換え
   exchange_energy = np.sum(grid_weights * electron_density_at_grids ** (4.0 / 3.0))
   exchange_energy *= exchange_coeff
 
