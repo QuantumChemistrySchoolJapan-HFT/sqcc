@@ -41,7 +41,7 @@ def run_hf_ksdft():
     # 設定ファイルから計算パラメータを読み込み
     mol_xyz, nuclear_numbers, geom_coordinates, basis_set_name, \
       ksdft_functional_name, molecular_charge, spin_multiplicity, \
-      flag_cis, flag_mp2, flag_qmmm, mm_charges_file = conf.get_calc_params()
+      spin_orbital_treatment, flag_cis, flag_mp2, flag_qmmm, mm_charges_file = conf.get_calc_params()
 
     # Read MM charges if QM/MM is enabled
     # QM/MMが有効な場合、MM電荷を読み込む
@@ -56,7 +56,8 @@ def run_hf_ksdft():
     myscf = hf_ksdft.Calculator(mol_xyz, nuclear_numbers,
                       geom_coordinates, basis_set_name,
                       ksdft_functional_name, molecular_charge,
-                      spin_multiplicity, mm_coords, mm_charges)
+                      spin_multiplicity, spin_orbital_treatment,
+                      mm_coords, mm_charges)
 
     # Perform the SCF calculation
     # SCF計算を実行

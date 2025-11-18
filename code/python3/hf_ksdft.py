@@ -20,7 +20,7 @@ class Calculator():
   """
   def __init__(self, mol_xyz, nuclear_numbers, geom_coordinates,
                basis_set_name, ksdft_functional_name,
-               molecular_charge, spin_multiplicity,
+               molecular_charge, spin_multiplicity, spin_orbital_treatment,
                mm_coords=None, mm_charges=None):
     """
     Initialize SCF calculator with molecular information
@@ -34,6 +34,7 @@ class Calculator():
         ksdft_functional_name: DFT functional name (None for HF) / DFT汎関数名（HFの場合None）
         molecular_charge: Molecular charge / 分子の電荷
         spin_multiplicity: Spin multiplicity (2S+1) / スピン多重度（2S+1）
+        spin_orbital_treatment: 'restricted' or 'unrestricted' / 'restricted'または'unrestricted'
         mm_coords: MM point charges coordinates in Angstrom (optional) / MM点電荷座標（オングストローム）（オプション）
         mm_charges: MM point charges in elementary charge (optional) / MM点電荷（素電荷）（オプション）
     """
@@ -48,6 +49,17 @@ class Calculator():
     # 総電子数を計算
     self.num_electrons = np.sum(nuclear_numbers) - molecular_charge
     self.spin_multiplicity = spin_multiplicity
+    self.spin_orbital_treatment = spin_orbital_treatment.lower()
+
+    # Validate spin_orbital_treatment for open-shell systems
+    # 開殻系でのspin_orbital_treatmentの妥当性を検証
+    if self.spin_multiplicity > 1 and self.spin_orbital_treatment == 'restricted':
+      raise ValueError(
+        f"Cannot use restricted calculation (spin_orbital_treatment='restricted') "
+        f"for open-shell system with spin_multiplicity={self.spin_multiplicity}. "
+        f"Use spin_orbital_treatment='unrestricted' for open-shell systems. "
+        f"開殻系（spin_multiplicity={self.spin_multiplicity}）では制限計算（spin_orbital_treatment='restricted'）を使用できません。"
+        f"開殻系にはspin_orbital_treatment='unrestricted'を使用してください。")
 
     # Store QM/MM information
     # QM/MM情報を保存
@@ -124,7 +136,8 @@ class Calculator():
     """
     # Restricted calculation (closed-shell)
     # 制限計算（閉殻系）
-    if self.spin_multiplicity == 1:
+    print(self.spin_orbital_treatment)
+    if self.spin_orbital_treatment == 'restricted':
       # Check if number of electrons is even
       # 電子数が偶数か確認
       if self.num_electrons % 2 != 0:
@@ -373,7 +386,7 @@ class Calculator():
 
     # Transform MO coefficients back to original AO basis
     # MO係数を元のAO基底に変換
-    if self.spin_multiplicity == 1:
+    if self.spin_orbital_treatment == 'restricted':
       mo_coefficients = np.matmul(orthogonalizer, temp_mo_coefficients)
     else:
       mo_coefficients = np.zeros((2, num_ao, num_ao))
@@ -403,7 +416,7 @@ class Calculator():
     # For KS-DFT: calculate initial electron density at grid points
     # KS-DFTの場合: グリッド点での初期電子密度を計算
     if self.flag_ksdft:
-      if self.spin_multiplicity == 1:
+      if self.spin_orbital_treatment == 'restricted':
         # RKS: Calculate total electron density: rho(r) = sum_pq P_pq * phi_p(r) * phi_q(r)
         # RKS: 総電子密度を計算: rho(r) = sum_pq P_pq * phi_p(r) * phi_q(r)
         electron_density_at_grids = np.zeros(num_grids)
@@ -433,7 +446,7 @@ class Calculator():
       # For KS-DFT: compute exchange-correlation potential and energy
       # KS-DFTの場合: 交換相関ポテンシャルとエネルギーを計算
       if self.flag_ksdft:
-        if self.spin_multiplicity == 1:
+        if self.spin_orbital_treatment == 'restricted':
           # RKS: Compute V_xc using spin-unpolarized LDA functional
           # RKS: スピン非分極LDA汎関数を使ってV_xcを計算
           exchange_correlation_potential = kdf.lda_potential(electron_density_at_grids)
@@ -464,7 +477,7 @@ class Calculator():
 
       # Build Fock matrix in AO basis
       # AO基底でFock行列を構築
-      if self.spin_multiplicity == 1:
+      if self.spin_orbital_treatment == 'restricted':
         # Compute Coulomb term J: J[p,q] = sum_rs (pq|rs) * P[r,s]
         # クーロン項Jを計算: J[p,q] = sum_rs (pq|rs) * P[r,s]
         electron_repulsion_in_Fock_matrix = np.zeros((num_ao, num_ao))
@@ -536,7 +549,7 @@ class Calculator():
 
       # Calculate the electronic energy (without nuclear repulsion)
       # 電子エネルギーを計算（核間反発を除く）
-      if self.spin_multiplicity == 1:
+      if self.spin_orbital_treatment == 'restricted':
         if not self.flag_ksdft:
           # HF energy: E_elec = 0.5 * Tr[P * (H_core + F)]
           # HFエネルギー: E_elec = 0.5 * Tr[P * (H_core + F)]
@@ -588,7 +601,7 @@ class Calculator():
 
       # Solve the one-electron eigenvalue problem to get new MOs
       # 新しいMOを得るために1電子固有値問題を解く
-      if self.spin_multiplicity == 1:
+      if self.spin_orbital_treatment == 'restricted':
         orbital_energies, mo_coefficients = Calculator.solve_one_electron_problem(
           orthogonalizer, fock_matrix)
       else:
@@ -599,7 +612,7 @@ class Calculator():
 
       # Transform MO coefficients back to original AO basis
       # MO係数を元のAO基底に変換
-      if self.spin_multiplicity == 1:
+      if self.spin_orbital_treatment == 'restricted':
         mo_coefficients = np.matmul(orthogonalizer, mo_coefficients)
       else:
         mo_coefficients = np.zeros((2, alpha_fock_matrix.shape[0],
@@ -615,7 +628,7 @@ class Calculator():
       # Update electron density at grids for KS-DFT
       # KS-DFTの場合、グリッドでの電子密度を更新
       if self.flag_ksdft:
-        if self.spin_multiplicity == 1:
+        if self.spin_orbital_treatment == 'restricted':
           # RKS: Update total electron density
           # RKS: 総電子密度を更新
           for n in range(num_grids):
@@ -639,7 +652,7 @@ class Calculator():
 
     # Save orbital energies correctly for both restricted and unrestricted
     # 制限系と非制限系の両方で軌道エネルギーを正しく保存
-    if self.spin_multiplicity == 1:
+    if self.spin_orbital_treatment == 'restricted':
       self.mo_energies = orbital_energies
       self.mo_coefficients = mo_coefficients
     else:
@@ -662,7 +675,7 @@ class Calculator():
       # Get which atom each basis function belongs to
       # 各基底関数がどの原子に属するかを取得
       ao_atomic_affiliation = proc_ao_integral.get_basis_atomic_affiliation()
-      if self.spin_multiplicity == 1:
+      if self.spin_orbital_treatment == 'restricted':
         # Compute charge matrix: Q = P * S
         # 電荷行列を計算: Q = P * S
         charge_matrix = np.matmul(density_matrix_in_ao_basis, ao_overlap_integral)
@@ -748,7 +761,7 @@ class Calculator():
 
     # Calculate occupation numbers
     # 占有数を計算
-    if self.spin_multiplicity == 1:
+    if self.spin_orbital_treatment == 'restricted':
       # Restricted: 2 electrons per occupied orbital
       # 制限系: 占有軌道あたり2電子
       num_occupied = self.num_electrons // 2

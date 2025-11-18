@@ -124,7 +124,7 @@ def read_xyz(xyz_file_name: str) -> Tuple[str, np.ndarray, np.ndarray]:
 def get_calc_params(
     flag_multiple_mols: bool = False,
     another_conf_file_name: str = 'sqc2.conf'
-) -> Tuple[str, np.ndarray, np.ndarray, str, Optional[str], int, int, bool, bool, bool, Optional[str]]:
+) -> Tuple[str, np.ndarray, np.ndarray, str, Optional[str], int, int, str, bool, bool, bool, Optional[str]]:
     """
     Parse configuration file and extract calculation parameters
     設定ファイルを解析して計算パラメータを取得
@@ -141,6 +141,7 @@ def get_calc_params(
         ksdft_functional_name: DFT functional name (None for HF) / DFT汎関数名（HFの場合None）
         molecular_charge: Molecular charge / 分子の電荷
         spin_multiplicity: Spin multiplicity (2S+1) / スピン多重度（2S+1）
+        spin_orbital_treatment: 'restricted' or 'unrestricted' / 'restricted'または'unrestricted'
         flag_cis: Run CIS calculation / CIS計算を実行
         flag_mp2: Run MP2 calculation / MP2計算を実行
         flag_qmmm: Enable QM/MM calculation / QM/MM計算を有効化
@@ -194,6 +195,22 @@ def get_calc_params(
     # オプションのDFT汎関数を取得（ハートリー・フォックの場合None）
     ksdft_functional_name = sqc_conf['calc'].get('ksdft_functional', None)
 
+    # Extract spin orbital treatment with automatic default based on spin multiplicity
+    # スピン軌道の扱いを取得（スピン多重度に基づいて自動デフォルト設定）
+    if sqc_conf['calc'].get('spin_orbital_treatment'):
+        spin_orbital_treatment = sqc_conf['calc'].get('spin_orbital_treatment').lower()
+        if spin_orbital_treatment not in ['restricted', 'unrestricted']:
+            raise ValueError(f"spin_orbital_treatment must be 'restricted' or 'unrestricted', got '{spin_orbital_treatment}'")
+    else:
+        # Automatic default: restricted for closed-shell (singlet), unrestricted for open-shell
+        # 自動デフォルト: 閉殻系（一重項）ではrestricted、開殻系ではunrestricted
+        if spin_multiplicity == 1:
+            spin_orbital_treatment = 'restricted'
+        else:
+            spin_orbital_treatment = 'unrestricted'
+        print(f"spin_orbital_treatment not specified, using automatic default: '{spin_orbital_treatment}'")
+        print(f"spin_orbital_treatmentが指定されていないため、自動デフォルト '{spin_orbital_treatment}' を使用します")
+
     # Read molecular geometry from XYZ file
     # XYZファイルから分子構造を読み込む
     mol_xyz, nuclear_numbers, geom_coordinates = read_xyz(xyz_file_name)
@@ -232,6 +249,7 @@ def get_calc_params(
         ksdft_functional_name,
         molecular_charge,
         spin_multiplicity,
+        spin_orbital_treatment,
         flag_cis,
         flag_mp2,
         flag_qmmm,
