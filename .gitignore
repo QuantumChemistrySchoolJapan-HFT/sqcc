@@ -1,6 +1,7 @@
 *.pyc
 *.dat
 *.pdf
+*.svg
 *.json
 test_*.py
 __pycache__/
