@@ -1,10 +1,18 @@
 # SQCC
 SQCC (Simple Quantum Chemistry Code)
 
-Japanese follows English.  
-英語の後に日本語の説明があります。
+---
+This README contains both English and Japanese descriptions.  
+Japanese description follows the English description.
 
-## Feature 特徴
+このREADMEには英語と日本語の説明が含まれています。  
+日本語での説明は英語の説明の後にあります。
+
+---
+
+## English
+
+### Feature
 SQCC is a super simple quantum chemistry code written in Python3 (and Fortran90).
 It is developed for educational purposes. The main purpose of this code is to
 provide a simple, but general implementation of quantum chemistry methods that
@@ -14,7 +22,7 @@ high computational performance or efficiency.
 However, it supports almost all basis functions and is in principle applicable
 to all molecules and materials.
 Thanks to Psi4, SQCC can handle various basis sets and molecular integrals.
-In modern quantum chemistry researchn, it is common to leverage
+In modern quantum chemistry research, it is common to leverage
 established software packages like Psi4 at the code level as a foundation for implementing
 new computational methods and ideas.
 SQCC may be used as a starting point for learning such software development.
@@ -28,6 +36,83 @@ The following quantum chemistry methods are implemented in this code:
 
 Note that only the exchange energy and potential of the local density approximation (LDA) are implemented in the current version.
 
+### Installation
+To install sqcc, assuming you have Anaconda (available from https://www.anaconda.com/download/success) installed, run the following commands:
+```bash
+git clone https://github.com/QuantumChemistrySchoolJapan-HFT/sqcc.git
+cd sqcc
+conda create -n sqcc_env psi4 numpy scipy matplotlib pandas -c conda-forge/label/libint_dev -c conda-forge
+```
+
+### For Beginners
+We assume that you can use a terminal in your operating system.
+If your operating system is Windows, we recommend using WSL (Windows Subsystem for Linux).
+If your operating system is MacOS or Linux, you can use the terminal directly.
+
+### Quick Start
+To run a simple Hartree-Fock calculation using sqcc, use the following command:
+```bash
+cd sqcc/tests/hf/n2_singlet/
+# Anaconda environment activation example
+conda activate sqcc_env
+python ../../../code/python3/run.py
+```
+
+### Inputs
+- `sqc.conf`: Configuration file of SimpleQC
+- `*.xyz`: XYZ file of a molecular geometry
+
+Example of `sqc.conf`:
+```
+[calc]
+geom_xyz = ../../n2.xyz
+# gauss_basis_set = def2-tzvp
+gauss_basis_set = sto-3g
+# ksdft_functional = None indicates the HF calculation
+ksdft_functional = lda
+molecular_charge = 0
+# 2S+1
+spin_multiplicity = 1
+# spin_orbital_treatment can be optionally specified:
+# spin_orbital_treatment = restricted
+# or
+# spin_orbital_treatment = unrestricted
+# If not specified, 'restricted' is used for closed-shell (spin_multiplicity=1),
+# and 'unrestricted' is used for open-shell systems.
+```
+"#" indicates a comment line.
+
+For more details, see the example files in the `tests` directory.
+
+For the xyz file format, see the following link:
+https://en.wikipedia.org/wiki/XYZ_file_format
+
+### Dependencies
+- **Psi4**: for AO integral and for generating numerical grids and weights (Tested with Psi4 1.9.1)
+- **Basis_Set_Exchange**: for getting basis sets
+
+### License
+This project is licensed under the MIT License. See the LICENSE file for details.
+The MIT license is a permissive free software license originating at the Massachusetts Institute of Technology (MIT).
+
+### Note
+Most of the code comments are generated based on those of my old code by using AI (Claude Sonnet 4.5) and I do not guarantee their correctness.
+Moreover, most of plotting tools are generated with Claude Sonnet 4.5 and may contain some mistakes.
+
+### References
+Most of the equations shown in the comments are from "Modern Quantum Chemistry".
+
+- Attila Szabo, Neil S. Ostlund, "Modern Quantum Chemistry: Introduction to Advanced Electronic Structure Theory"
+- 中井浩巳、「手で解く量子化学 I、 II」
+- Frank Jensen, "Introduction to Computational Chemistry"
+- R G. Parr, W. Yang, Density-Functional Theory of Atoms and Molecules, Oxford Science Publications (1989).
+- D. Cook, Handbook of Computational Chemistry, Oxford University Press (1998).
+
+---
+
+## 日本語
+
+### 特徴
 SQCCは、Python3（とFortran90）で書かれた非常に単純な量子化学計算コードです。
 教育目的で開発されており、ユーザーが簡単に理解し、修正できるような単純で一般的な量子化学手法の実装を提供することを主な目的としています。
 SQCCは、高い計算性能や効率というよりも、教科書に載っているような式をそのまま実装することに重点を置いています。
@@ -45,98 +130,74 @@ SQCCは、そのようなソフトウェア開発を学ぶための出発点と�
 
 注意：現在のバージョンでは、局所密度近似（LDA）の交換エネルギーとポテンシャルのみが実装されています。
 
-## Installation インストール
-To install sqcc, assuming you have Anaconda (available from https://www.anaconda.com/download/success) installed, run the following commands:  
-sqccをインストールするには、Anaconda（https://www.anaconda.com/download/success から入手可能）がインストールされていることを前提に、以下のコマンドを実行します：  
+### インストール
+sqccをインストールするには、Anaconda（https://www.anaconda.com/download/success から入手可能）がインストールされていることを前提に、以下のコマンドを実行します：
 ```bash
 git clone https://github.com/QuantumChemistrySchoolJapan-HFT/sqcc.git
 cd sqcc
 conda create -n sqcc_env psi4 numpy scipy matplotlib pandas -c conda-forge/label/libint_dev -c conda-forge
 ```
 
-## For beginners 初心者向け
-We assume that you can use a terminal in your operating system.
-If your operating system is Windows, we recommend using WSL (Windows Subsystem for Linux).
-If your operating system is MacOS or Linux, you can use the terminal directly.
-
+### 初心者向け
 我々は、あなたがオペレーティングシステムのターミナルを使用できることを前提としています。
 オペレーティングシステムがWindowsの場合、WSL（Windows Subsystem for Linux）の使用をお勧めします。
 オペレーティングシステムがMacOSまたはLinuxの場合、ターミナルを直接使用できます。
 
-## Quick Start クイックスタート
-To run a simple Hartree-Fock calculation using sqcc, use the following command:  
+### クイックスタート
 単純なハートリー・フォック計算をsqccで実行するには、以下のコマンドを使用します：
 ```bash
 cd sqcc/tests/hf/n2_singlet/
-# Anaconda environment activation example
 # Anaconda環境のアクティベート例
 conda activate sqcc_env
 python ../../../code/python3/run.py
 ```
 
-## Inputs インプット
-sqc.conf: Configuration file of SimpleQC  
-*.xyz: XYZ file of a molecular geometry
+### インプット
+- `sqc.conf`: SimpleQCの設定ファイル
+- `*.xyz`: 分子のジオメトリを記述したXYZファイル
 
-sqc.conf: SimpleQCの設定ファイル  
-*.xyz: 分子のジオメトリを記述したXYZファイル
-
-sqc.conf example:  
-sqc.confの例：
+`sqc.conf`の例：
 ```
 [calc]
 geom_xyz = ../../n2.xyz
 # gauss_basis_set = def2-tzvp
 gauss_basis_set = sto-3g
-# ksdft_functional = None indicates the HF calculation
+# ksdft_functional = None はHF計算を示します
 ksdft_functional = lda
 molecular_charge = 0
 # 2S+1
 spin_multiplicity = 1
-# spin_orbital_treatment can be added as follows:
+# spin_orbital_treatment はオプションで指定可能：
 # spin_orbital_treatment = restricted
-# or
+# または
 # spin_orbital_treatment = unrestricted
+# 指定しない場合、閉殻系（spin_multiplicity=1）では 'restricted'、
+# 開殻系では 'unrestricted' が自動的に使用されます。
 ```
-"#" indicates a comment line.  
 "#"はコメント行を示します。
 
-For more details, see the example files in the `tests` directory.  
 詳細については、`tests`ディレクトリ内のサンプルファイルを参照してください。
 
-For the xyz file format, see the following link:  
-xyzファイルフォーマットについては、以下のリンクを参照してください：  
+xyzファイルフォーマットについては、以下のリンクを参照してください：
 https://en.wikipedia.org/wiki/XYZ_file_format
 
-## Dependencies 依存関係
-Psi4: for AO integral and for generating numerical grids and weights
-(T.S. only tested in Psi4 1.9.1)  
-Basis_Set_Exchange: for getting basis sets
+### 依存関係
+- **Psi4**: AO積分および数値グリッドと重みの生成のため（Psi4 1.9.1で動作確認済み）
+- **Basis_Set_Exchange**: 基底関数セットの取得のため
 
-Psi4: AO積分および数値グリッドと重みの生成のため
-(Psi4 1.9.1でのみ動作確認済み)  
-Basis_Set_Exchange: 基底関数セットの取得のため
-
-## License ライセンス
-This project is licensed under the MIT License. See the LICENSE file for details.
-The MIT license is a permissive free software license originating at the Massachusetts Institute of Technology (MIT).  
+### ライセンス
 このプロジェクトはMITライセンスの下でライセンスされています。詳細はLICENSEファイルを参照してください。
 MITライセンスは、マサチューセッツ工科大学（MIT）に由来する寛容なフリーソフトウェアライセンスです。
 
-## Note 注意
-Most of the code comments are generated based on those of my old code by using AI (Claude Sonnet 4.5) and I do not guarantee their correctness.
-Moreover, most of plotting tools are generated with Claude Sonnet 4.5 and may contain some mistakes.
-
+### 注意
 コードのコメントの大部分は、私の古いコードのそれらを元にAI（Claude Sonnet 4.5）を使用して生成・修正したものであり、その正確性を保証するものではありません。
 さらに、プロットツールの大部分はClaude Sonnet 4.5で生成されており、いくつかの誤りが含まれている可能性があります。
 
-
-## References 参考文献
-Most of the equations shown in the comments are from "Modern Quantum Chemistry".
+### 参考文献
 コメントに示したほとんどの式は、"Modern Quantum Chemistry"に記載されています。
 
-- Attila Szabo, Neil S. Ostlund, “Modern Quantum Chemistry: Introduction to Advanced Electronic Structure Theory"（和訳：「新しい量子化学」）
+- Attila Szabo, Neil S. Ostlund, "Modern Quantum Chemistry: Introduction to Advanced Electronic Structure Theory"（和訳：「新しい量子化学」）
 - 中井浩巳、「手で解く量子化学 I、 II」
-- Frank Jensen, “Introduction to Computational Chemistry”（和訳：「計算化学」）
+- Frank Jensen, "Introduction to Computational Chemistry"（和訳：「計算化学」）
 - R G. Parr, W. Yang, Density-Functional Theory of Atoms and Molecules, Oxford Science Publications (1989).
 - D. Cook, Handbook of Computational Chemistry, Oxford University Press (1998).
