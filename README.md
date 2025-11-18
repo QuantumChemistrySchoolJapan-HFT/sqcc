@@ -87,7 +87,8 @@ sqc.confの例：
 [calc]
 geom_xyz = ../../n2.xyz
 # gauss_basis_set = def2-tzvp
-gauss_basis_set = def2-tzvp
+gauss_basis_set = sto-3g
+# ksdft_functional = None indicates the HF calculation
 ksdft_functional = lda
 molecular_charge = 0
 # 2S+1
