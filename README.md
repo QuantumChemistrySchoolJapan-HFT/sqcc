@@ -129,7 +129,7 @@ For the xyz file format, see the following link:
 https://en.wikipedia.org/wiki/XYZ_file_format
 
 For QM/MM calculations, the xyz format is a little bit extended to include MM point charges with fractional values.
-The `sqc.conf` reads
+The corresponding `sqc.conf` reads
 ```
 [calc]
 geom_xyz = n2.xyz
@@ -142,14 +142,14 @@ mm_charges = mm_charges.xyz
 [analysis]
 electron_density = true
 ```
-and the `mm_charges.xyz` contains
+and `mm_charges.xyz` contains
 ```
 2
 
 0.2 0.0 1.0 4.0
 0.2 0.0 -1.0 4.0
 ```
-where the first column is the charge value, and the next three columns are the x, y, z coordinates of the MM point charges.
+where the first column is the charge value (in elementary charge units), and the next three columns are the x, y, z coordinates of the MM point charges.
 
 ### Dependencies
 - **Psi4**: for AO integral and for generating numerical grids and weights (Tested with Psi4 1.9.1)
@@ -260,7 +260,7 @@ electron_density = True
 xyzファイルフォーマットについては、以下のリンクを参照してください：
 https://en.wikipedia.org/wiki/XYZ_file_format
 
-QM/MM計算の場合、xyzフォーマットはMM点電荷を小数値で含むように少し拡張されています。
+QM/MM計算の場合、xyzフォーマットはMM点電荷を実数値で含むように少し拡張されています。
 `sqc.conf`は以下のように読み込みます：
 ```
 [calc]
@@ -281,7 +281,7 @@ electron_density = true
 0.2 0.0 1.0 4.0
 0.2 0.0 -1.0 4.0
 ```
-ここで、最初の列は電荷値、次の3列はMM点電荷のx、y、z座標を示します。
+ここで、最初の列は電荷値（実数値、単位は素電荷）、次の3列はMM点電荷のx、y、z座標を示します。
 
 
 ### 依存関係
