@@ -12,11 +12,9 @@ SQCC (Simple Quantum Chemistry Code)
 
 ---
 
-This README contains both English and Japanese descriptions.  
-Japanese description follows the English description.
+This README contains both English and Japanese descriptions.
 
-このREADMEには英語と日本語の説明が含まれています。  
-日本語での説明は英語の説明の後にあります。
+このREADMEには英語と日本語の説明が含まれています。
 
 
 ## Table of Contents / 目次
@@ -37,7 +35,7 @@ Japanese description follows the English description.
 ## English
 
 ### Feature
-SQCC is a super simple quantum chemistry code written in Python3 (and Fortran90).
+SQCC is a super simple quantum chemistry code written in Python.
 It is developed for educational purposes. The main purpose of this code is to
 provide a simple, but general implementation of quantum chemistry methods that
 can be easily understood and modified by users.
@@ -61,7 +59,7 @@ The following quantum chemistry methods are implemented in this code:
 Note that only the exchange energy and potential of the local density approximation (LDA) are implemented in the current version.
 
 ### Installation
-To install sqcc, assuming you have Anaconda (available from https://www.anaconda.com/download/success) installed, run the following commands:
+To install sqcc, assuming you have Anaconda (available from https://www.anaconda.com/download/success) and Git installed, run the following commands:
 ```bash
 git clone https://github.com/QuantumChemistrySchoolJapan-HFT/sqcc.git
 cd sqcc
@@ -129,8 +127,8 @@ Most of the equations shown in the comments are from "Modern Quantum Chemistry".
 - Attila Szabo, Neil S. Ostlund, "Modern Quantum Chemistry: Introduction to Advanced Electronic Structure Theory"
 - 中井浩巳、「手で解く量子化学 I、 II」
 - Frank Jensen, "Introduction to Computational Chemistry"
-- R G. Parr, W. Yang, Density-Functional Theory of Atoms and Molecules, Oxford Science Publications (1989).
-- D. Cook, Handbook of Computational Chemistry, Oxford University Press (1998).
+- R G. Parr, W. Yang, "Density-Functional Theory of Atoms and Molecules".
+- D. Cook, "Handbook of Computational Chemistry".
 
 ### Contributors
 - Takafumi Shiraogawa (Human)
@@ -138,14 +136,14 @@ Most of the equations shown in the comments are from "Modern Quantum Chemistry".
 - ChatGPT-5.1-Codex (AI)
 
 ### Acknowledgments
-T.S. would like to express his sincere gratitude to GitHub and Microsoft for providing excellent AI for free.
+T.S. acknowledges GitHub and Microsoft for providing excellent AI for free.
 
 ---
 
 ## 日本語
 
 ### 特徴
-SQCCは、Python3（とFortran90）で書かれた非常に単純な量子化学計算コードです。
+SQCCは、Python3で書かれた非常に単純な量子化学計算コードです。
 教育目的で開発されており、ユーザーが簡単に理解し、修正できるような単純で一般的な量子化学手法の実装を提供することを主な目的としています。
 SQCCは、高い計算性能や効率というよりも、教科書に載っているような式をそのまま実装することに重点を置いています。
 しかしながら、ほとんど全ての基底関数をサポートし、原理的には全ての分子と物質に適用可能です。
@@ -163,7 +161,7 @@ SQCCは、そのようなソフトウェア開発を学ぶための出発点と�
 注意：現在のバージョンでは、局所密度近似（LDA）の交換エネルギーとポテンシャルのみが実装されています。
 
 ### インストール
-sqccをインストールするには、Anaconda（https://www.anaconda.com/download/success から入手可能）がインストールされていることを前提に、以下のコマンドを実行します：
+sqccをインストールするには、Anaconda（https://www.anaconda.com/download/success から入手可能）とGitがインストールされていることを前提に、以下のコマンドを実行します：
 ```bash
 git clone https://github.com/QuantumChemistrySchoolJapan-HFT/sqcc.git
 cd sqcc
@@ -231,8 +229,8 @@ MITライセンスは、マサチューセッツ工科大学（MIT）に由来�
 - Attila Szabo, Neil S. Ostlund, "Modern Quantum Chemistry: Introduction to Advanced Electronic Structure Theory"（和訳：「新しい量子化学」）
 - 中井浩巳、「手で解く量子化学 I、 II」
 - Frank Jensen, "Introduction to Computational Chemistry"（和訳：「計算化学」）
-- R G. Parr, W. Yang, Density-Functional Theory of Atoms and Molecules, Oxford Science Publications (1989).
-- D. Cook, Handbook of Computational Chemistry, Oxford University Press (1998).
+- R G. Parr, W. Yang, "Density-Functional Theory of Atoms and Molecules"".
+- D. Cook, "Handbook of Computational Chemistry".
 
 ### 貢献者
 - 白男川貴史（人間）
@@ -241,4 +239,4 @@ MITライセンスは、マサチューセッツ工科大学（MIT）に由来�
 
 
 ### 謝辞
-素晴らしいAIを無料で提供してくださったGithub社とMicrosoft社に心より感謝申し上げます。
+素晴らしいAIを無料で提供してくださったGithub社とMicrosoft社に心より感謝申します。
