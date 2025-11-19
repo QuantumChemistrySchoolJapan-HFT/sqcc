@@ -23,12 +23,24 @@ This README contains both English and Japanese descriptions.
   - [Features](#features)
   - [Installation](#installation)
   - [Quick Start](#quick-start)
-  - [Documentation](#documentation)
+  - [Inputs](#inputs)
+  - [Dependencies](#dependencies)
+  - [License](#license)
+  - [Note](#note)
+  - [References](#references)
+  - [Contributors](#contributors)
+  - [Acknowledgments](#acknowledgments)
 - [日本語](#日本語)
   - [特徴](#特徴)
   - [インストール](#インストール)
   - [クイックスタート](#クイックスタート)
-  - [ドキュメント](#ドキュメント)
+  - [インプット](#インプット)
+  - [依存関係](#依存関係)
+  - [ライセンス](#ライセンス)
+  - [注意](#注意)
+  - [参考文献](#参考文献)
+  - [貢献者](#貢献者)
+  - [謝辞](#謝辞)
 ---
 
 
@@ -59,7 +71,7 @@ The following quantum chemistry methods are implemented in this code:
 Note that only the exchange energy and potential of the local density approximation (LDA) are implemented in the current version.
 
 ### Installation
-To install sqcc, assuming you have Anaconda (available from https://www.anaconda.com/download/success) and Git installed, run the following commands:
+To install sqcc, assuming you have Anaconda (available from https://www.anaconda.com/download/success) and Git (available from https://git-scm.com/install/windows) installed, run the following commands:
 ```bash
 git clone https://github.com/QuantumChemistrySchoolJapan-HFT/sqcc.git
 cd sqcc
@@ -101,6 +113,13 @@ spin_multiplicity = 1
 # spin_orbital_treatment = unrestricted
 # If not specified, 'restricted' is used for closed-shell (spin_multiplicity=1),
 # and 'unrestricted' is used for open-shell systems.
+
+[analysis]
+# True or False
+electron_density = True
+# electron_density_difference = True
+# mo_file1 = ../../hf/benzene_singlet/mo_data.json
+# mo_file2 = ../../hf_mm/benzene_singlet/mo_data.json
 ```
 "#" indicates a comment line.
 
@@ -109,9 +128,32 @@ For more details, see the example files in the `tests` directory.
 For the xyz file format, see the following link:
 https://en.wikipedia.org/wiki/XYZ_file_format
 
+For QM/MM calculations, the xyz format is a little bit extended to include MM point charges with fractional values.
+The `sqc.conf` reads
+```
+[calc]
+geom_xyz = n2.xyz
+gauss_basis_set = def2-tzvp
+molecular_charge = 0
+spin_multiplicity = 1
+qmmm = true
+mm_charges = mm_charges.xyz
+
+[analysis]
+electron_density = true
+```
+and the `mm_charges.xyz` contains
+```
+2
+
+0.2 0.0 1.0 4.0
+0.2 0.0 -1.0 4.0
+```
+where the first column is the charge value, and the next three columns are the x, y, z coordinates of the MM point charges.
+
 ### Dependencies
 - **Psi4**: for AO integral and for generating numerical grids and weights (Tested with Psi4 1.9.1)
-- **Basis_Set_Exchange**: for getting basis sets
+- **Basis_Set_Exchange**: for molecular properties and (getting basis set information in future)
 
 ### License
 This project is licensed under the MIT License. See the LICENSE file for details.
@@ -161,7 +203,7 @@ SQCCは、そのようなソフトウェア開発を学ぶための出発点と�
 注意：現在のバージョンでは、局所密度近似（LDA）の交換エネルギーとポテンシャルのみが実装されています。
 
 ### インストール
-sqccをインストールするには、Anaconda（https://www.anaconda.com/download/success から入手可能）とGitがインストールされていることを前提に、以下のコマンドを実行します：
+sqccをインストールするには、Anaconda（https://www.anaconda.com/download/success から入手可能）とGit（https://git-scm.com/install/windowsから入手可能）がインストールされていることを前提に、以下のコマンドを実行します：
 ```bash
 git clone https://github.com/QuantumChemistrySchoolJapan-HFT/sqcc.git
 cd sqcc
@@ -203,6 +245,13 @@ spin_multiplicity = 1
 # spin_orbital_treatment = unrestricted
 # 指定しない場合、閉殻系（spin_multiplicity=1）では 'restricted'、
 # 開殻系では 'unrestricted' が自動的に使用されます。
+
+[analysis]
+# True or False
+electron_density = True
+# electron_density_difference = True
+# mo_file1 = ../../hf/benzene_singlet/mo_data.json
+# mo_file2 = ../../hf_mm/benzene_singlet/mo_data.json
 ```
 "#"はコメント行を示します。
 
@@ -211,12 +260,37 @@ spin_multiplicity = 1
 xyzファイルフォーマットについては、以下のリンクを参照してください：
 https://en.wikipedia.org/wiki/XYZ_file_format
 
+QM/MM計算の場合、xyzフォーマットはMM点電荷を小数値で含むように少し拡張されています。
+`sqc.conf`は以下のように読み込みます：
+```
+[calc]
+geom_xyz = n2.xyz
+gauss_basis_set = def2-tzvp
+molecular_charge = 0
+spin_multiplicity = 1
+qmmm = true
+mm_charges = mm_charges.xyz
+
+[analysis]
+electron_density = true
+```
+そして、`mm_charges.xyz`は以下の内容を含みます：
+```
+2
+
+0.2 0.0 1.0 4.0
+0.2 0.0 -1.0 4.0
+```
+ここで、最初の列は電荷値、次の3列はMM点電荷のx、y、z座標を示します。
+
+
 ### 依存関係
-- **Psi4**: AO積分および数値グリッドと重みの生成のため（Psi4 1.9.1で動作確認済み）
+- **Psi4**: AO積分および数値グリッドと数値積分の重みの生成のため（Psi4 1.9.1で動作確認済み）
 - **Basis_Set_Exchange**: 基底関数セットの取得のため
 
 ### ライセンス
-このプロジェクトはMITライセンスの下でライセンスされています。詳細はLICENSEファイルを参照してください。
+このプロジェクトはMITライセンスの下でライセンスされています。
+詳細はLICENSEファイルを参照してください。
 MITライセンスは、マサチューセッツ工科大学（MIT）に由来する寛容なフリーソフトウェアライセンスです。
 
 ### 注意
@@ -237,6 +311,5 @@ MITライセンスは、マサチューセッツ工科大学（MIT）に由来�
 - Claude Sonnet 4.5（人工知能）
 - ChatGPT-5.1-Codex（人工知能）
 
-
 ### 謝辞
-素晴らしいAIを無料で提供してくださったGithub社とMicrosoft社に心より感謝申します。
+素晴らしいAIを無料で提供してくださったGithub社とMicrosoft社に感謝します。
