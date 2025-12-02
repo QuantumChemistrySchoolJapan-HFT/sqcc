@@ -12,8 +12,7 @@ SQCC (Simple Quantum Chemistry Code)
 
 ---
 
-This README contains both English and Japanese descriptions.
-
+This README contains both English and Japanese descriptions.  
 このREADMEには英語と日本語の説明が含まれています。
 
 
@@ -169,8 +168,8 @@ Most of the equations shown in the comments are from "Modern Quantum Chemistry".
 - Attila Szabo, Neil S. Ostlund, "Modern Quantum Chemistry: Introduction to Advanced Electronic Structure Theory"
 - 中井浩巳、「手で解く量子化学 I、 II」
 - Frank Jensen, "Introduction to Computational Chemistry"
-- R G. Parr, W. Yang, "Density-Functional Theory of Atoms and Molecules".
-- D. Cook, "Handbook of Computational Chemistry".
+- R G. Parr, W. Yang, "Density-Functional Theory of Atoms and Molecules"
+- D. Cook, "Handbook of Computational Chemistry"
 
 ### Contributors
 - Takafumi Shiraogawa (Human)
@@ -203,7 +202,7 @@ SQCCは、そのようなソフトウェア開発を学ぶための出発点と�
 注意：現在のバージョンでは、局所密度近似（LDA）の交換エネルギーとポテンシャルのみが実装されています。
 
 ### インストール
-sqccをインストールするには、Anaconda（https://www.anaconda.com/download/success から入手可能）とGit（https://git-scm.com/install/windowsから入手可能）がインストールされていることを前提に、以下のコマンドを実行します：
+sqccをインストールするには、Anaconda（https://www.anaconda.com/download/success から入手可能）とGit（https://git-scm.com/install/windows から入手可能）がインストールされていることを前提に、以下のコマンドを実行します：
 ```bash
 git clone https://github.com/QuantumChemistrySchoolJapan-HFT/sqcc.git
 cd sqcc
@@ -303,8 +302,8 @@ MITライセンスは、マサチューセッツ工科大学（MIT）に由来�
 - Attila Szabo, Neil S. Ostlund, "Modern Quantum Chemistry: Introduction to Advanced Electronic Structure Theory"（和訳：「新しい量子化学」）
 - 中井浩巳、「手で解く量子化学 I、 II」
 - Frank Jensen, "Introduction to Computational Chemistry"（和訳：「計算化学」）
-- R G. Parr, W. Yang, "Density-Functional Theory of Atoms and Molecules"".
-- D. Cook, "Handbook of Computational Chemistry".
+- R G. Parr, W. Yang, "Density-Functional Theory of Atoms and Molecules"
+- D. Cook, "Handbook of Computational Chemistry"
 
 ### 貢献者
 - 白男川貴史（人間）
@@ -312,4 +311,4 @@ MITライセンスは、マサチューセッツ工科大学（MIT）に由来�
 - ChatGPT-5.1-Codex（人工知能）
 
 ### 謝辞
-素晴らしいAIを無料で提供してくださったGithub社とMicrosoft社に感謝します。
+素晴らしいAIを無料で提供してくださったGitHub社とMicrosoft社に感謝します。
